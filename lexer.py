@@ -185,19 +185,35 @@ class Lexer:
         """
         
         # Remove spaces, tabs, comments, and "empty" lines, if any, before matching the next Tokentype.
-            
-        if self.ch == '#':
-            while(self.ch != '\n'):
+        while self.ch == '#' or '\n' or ' ' or '\t' :
+            if self.ch == '#':
+                while(self.ch != '\n'):
+                    self.__read_next_char()
+            else :
                 self.__read_next_char()
-        
+
         # Record the start location of the lexeme we're matching.
         loc = Location(self.line, self.col)
+
+
 
         if self.within_string_literal:
             chars = [self.ch]
             token = Token(Tokentype.StringLiteral, ''.join(chars), loc)
 
         # Ensure indentation is correct, emitting (returning) an INDENT/DEDENT token if called for.
+        if self.beginning_of_logical_line:
+            if loc.col == self.legal_indent_levels[-1]:
+                pass
+            else :
+                if loc.col > self.legal_indent_levels[-1]:
+                    self.legal_indent_levels.append(loc.col)
+                    token = Token(Tokentype.Indent, 'INDENT', loc)
+                else:
+                    self.legal_indent_levels.pop()
+                    token = Token(Tokentype.Dedent, 'DEDENT', loc)
+                self.beginning_of_logical_line = False
+                return token
 
         # Now, try to match a lexeme.
         if self.ch == '':
@@ -222,8 +238,14 @@ class Lexer:
             self.within_string_literal = True
             # Check for a string literal. Raise "Unterminated string"
             # syntax error exception if the string doesn't close on the line.
+            self.__read_next_char()
+            while self.ch != '"':
+                if self.ch == '\n':
+                    raise SyntaxErrorException("Unterminated Struing", loc)
+                self.__read_next_char()
+            token = Token(Tokentype.StringLiteral, self.ch, loc)
 
-            #...
+
             #token = Token(Tokentype.StringLiteral, "?", loc)
 
         else:
