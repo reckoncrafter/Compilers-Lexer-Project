@@ -1,3 +1,4 @@
 cc = 0
-c = "ciao"
-print(c)
+    c = "ciao"
+
+        print(c)

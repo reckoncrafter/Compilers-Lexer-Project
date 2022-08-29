@@ -191,6 +191,8 @@ class Lexer:
                     print(self.ch)
                     self.__read_next_char()
             else:
+                while(self.ch == ' '):
+                    self.__read_next_char()
                 self.__read_next_char()
         #procedure for empty lines, not working :((
         elif self.ch == '':
@@ -208,6 +210,7 @@ class Lexer:
         #     token = Token(Tokentype.StringLiteral, ''.join(chars), loc)
 
         # Ensure indentation is correct, emitting (returning) an INDENT/DEDENT token if called for.
+        # print(loc.col)
         if self.beginning_of_logical_line:
             if loc.col == self.legal_indent_levels[-1]:
                 pass
@@ -224,7 +227,7 @@ class Lexer:
         # Now, try to match a lexeme.
         if self.ch == '':
             token = Token(Tokentype.EOI, '', loc)
-        elif self.ch == '+':
+        elif self.ch == '+': 
             token = Token(Tokentype.OpPlus, self.ch, loc)
             self.__read_next_char()
         elif self.ch == '=':
@@ -263,7 +266,7 @@ class Lexer:
             # Check for identifiers/reserved words.
             if ('a' <= self.ch <= 'z') or ('A' <= self.ch <= 'Z') or (self.ch == '_'):
                 # Match an identifier.
-                print("here id")
+                #print("here id")
                 chars = [self.ch]
                 self.__read_next_char()
                 while ('a' <= self.ch <= 'z') or ('A' <= self.ch <= 'Z') or (self.ch == '_') or self.ch.isdigit():
