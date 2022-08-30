@@ -242,7 +242,7 @@ class Lexer:
                 token = Token(Tokentype.OpEq, self.ch, loc)
                 self.__read_next_char()
             else:
-                token = Token(Tokentype.OpAssign, self.ch, loc)
+                token = Token(Tokentype.OpAssign, '=', loc)
         elif self.ch == '<':
             self.__read_next_char()
             if self.ch == '=':
