@@ -3,7 +3,8 @@ c = "ciao"
 z = 0
 
 
-
+while():
+    import
 
 if z==0:
     x = 0

@@ -313,8 +313,10 @@ class Lexer:
                 while ('a' <= self.ch <= 'z') or ('A' <= self.ch <= 'Z') or (self.ch == '_') or self.ch.isdigit():
                     chars.append(self.ch)
                     self.__read_next_char()
-                if ''.join(chars) == 'if':
-                    token = Token(Tokentype.Identifier, ''.join(chars), loc)
+
+                keyword = ''.join(chars)
+                if keyword in self.__reserved_words:
+                    token = Token(self.__reserved_words[keyword], keyword, loc)
                 else:
                     token = Token(Tokentype.Identifier, ''.join(chars), loc)
             elif self.ch.isdigit():
