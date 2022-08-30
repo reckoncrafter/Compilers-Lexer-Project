@@ -185,24 +185,17 @@ class Lexer:
         """
         
         # Remove spaces, tabs, comments, and "empty" lines, if any, before matching the next Tokentype.
-        if self.ch == '#' or self.ch == ' ' or self.ch == '\t':
+        while self.ch == '#' or self.ch == ' ' or self.ch == '\t':
             if self.ch == '#':
                 while self.ch != '\n':
-                    print(self.ch)
                     self.__read_next_char()
             else:
-                while(self.ch == ' '):
-                    self.__read_next_char()
                 self.__read_next_char()
-        #procedure for empty lines, not working :((
-        elif self.ch == '':
+        while self.ch == '\n' and self.beginning_of_logical_line:
             self.__read_next_char()
-            if self.ch == '\n':
-                self.__read_next_char()
-
-
 
         # Record the start location of the lexeme we're matching.
+
         loc = Location(self.line, self.col)
 
         # if self.within_string_literal:
@@ -210,11 +203,8 @@ class Lexer:
         #     token = Token(Tokentype.StringLiteral, ''.join(chars), loc)
 
         # Ensure indentation is correct, emitting (returning) an INDENT/DEDENT token if called for.
-        # print(loc.col)
         if self.beginning_of_logical_line:
-            if loc.col == self.legal_indent_levels[-1]:
-                pass
-            else:
+            if loc.col != self.legal_indent_levels[-1]:
                 if loc.col > self.legal_indent_levels[-1]:
                     self.legal_indent_levels.append(loc.col)
                     token = Token(Tokentype.Indent, 'INDENT', loc)
@@ -227,12 +217,32 @@ class Lexer:
         # Now, try to match a lexeme.
         if self.ch == '':
             token = Token(Tokentype.EOI, '', loc)
-        elif self.ch == '+': 
+        elif self.ch == '+':
             token = Token(Tokentype.OpPlus, self.ch, loc)
             self.__read_next_char()
-        elif self.ch == '=':
-            token = Token(Tokentype.OpAssign, self.ch, loc)
+        elif self.ch == '-':
             self.__read_next_char()
+            if self.ch == '>':
+                token = Token(Tokentype.Arrow, '->', loc)
+            else:
+                token = Token(Tokentype.OpMinus, self.ch, loc)
+
+        elif self.ch == '*':
+            token = Token(Tokentype.OpMultiply, self.ch, loc)
+            self.__read_next_char()
+        elif self.ch == '\\':
+            token = Token(Tokentype.OpIntDivide, self.ch, loc)
+            self.__read_next_char()
+        elif self.ch == '%':
+            token = Token(Tokentype.OpModulus, self.ch, loc)
+            self.__read_next_char()
+        elif self.ch == '=':
+            self.__read_next_char()
+            if self.ch == '=':
+                token = Token(Tokentype.OpEq, self.ch, loc)
+                self.__read_next_char()
+            else:
+                token = Token(Tokentype.OpAssign, self.ch, loc)
         elif self.ch == '<':
             self.__read_next_char()
             if self.ch == '=':
@@ -240,6 +250,38 @@ class Lexer:
                 self.__read_next_char()
             else:
                 token = Token(Tokentype.OpLt, '<', loc)
+        elif self.ch == '>':
+            self.__read_next_char()
+            if self.ch == '=':
+                token = Token(Tokentype.OpGtEq, '>=', loc)
+                self.__read_next_char()
+            else:
+                token = Token(Tokentype.OpGt, '>', loc)
+        elif self.ch == '!':
+            self.__read_next_char()
+            if self.ch == '=':
+                token = Token(Tokentype.OpNotEq, '!=', loc)
+        elif self.ch == '(':
+            token = Token(Tokentype.ParenthesisL, '(', loc)
+            self.__read_next_char()
+        elif self.ch == ')':
+            token = Token(Tokentype.ParenthesisR, ')', loc)
+            self.__read_next_char()
+        elif self.ch == '[':
+            token = Token(Tokentype.BracketL, '[', loc)
+            self.__read_next_char()
+        elif self.ch == ']':
+            token = Token(Tokentype.BracketR, ']', loc)
+            self.__read_next_char()
+        elif self.ch == ',':
+            token = Token(Tokentype.Comma, ',', loc)
+            self.__read_next_char()
+        elif self.ch == ':':
+            token = Token(Tokentype.Colon, ':', loc)
+            self.__read_next_char()
+        elif self.ch == '.':
+            token = Token(Tokentype.Period, '.', loc)
+            self.__read_next_char()
         elif self.ch == '\n':
             token = Token(Tokentype.Newline, self.ch, loc)
             self.__read_next_char()
@@ -266,13 +308,15 @@ class Lexer:
             # Check for identifiers/reserved words.
             if ('a' <= self.ch <= 'z') or ('A' <= self.ch <= 'Z') or (self.ch == '_'):
                 # Match an identifier.
-                #print("here id")
                 chars = [self.ch]
                 self.__read_next_char()
                 while ('a' <= self.ch <= 'z') or ('A' <= self.ch <= 'Z') or (self.ch == '_') or self.ch.isdigit():
                     chars.append(self.ch)
                     self.__read_next_char()
-                token = Token(Tokentype.Identifier, ''.join(chars), loc)
+                if ''.join(chars) == 'if':
+                    token = Token(Tokentype.Identifier, ''.join(chars), loc)
+                else:
+                    token = Token(Tokentype.Identifier, ''.join(chars), loc)
             elif self.ch.isdigit():
                 # Match a number literal.
                 chars = [self.ch]
