@@ -334,9 +334,19 @@ class Lexer:
             elif self.ch.isdigit():
                 # Match a number literal.
                 chars = [self.ch]
+                if self.ch == '0':
+                    self.__read_next_char()
+                    if self.ch.isdigit():
+                        raise SyntaxErrorException("Ill formed integer", loc)
                 self.__read_next_char()
                 while self.ch.isdigit():
                     chars.append(self.ch)
+                    self.__read_next_char()
+
+
+                if int(''.join(chars)) > 2147483647:
+                    raise SyntaxErrorException("Int too big", loc)
+
                 token = Token(Tokentype.IntegerLiteral, ''.join(chars), loc)
             else:
                 # Return Unknown if no other known token is matched.
