@@ -143,6 +143,13 @@ class Lexer:
         "False": Tokentype.BoolFalseLiteral
     }
 
+    __string_characters = {
+        "\\",
+        "n",
+        "t",
+        "\""
+    }
+
     def __read_next_char(self):
         """
         Private helper routine. Reads the next input character, while keeping
@@ -295,8 +302,13 @@ class Lexer:
                 if self.ch == '\n':
                     raise SyntaxErrorException("Unterminated String", loc)
                 else:
-                    if self.ch == '\"':
-                        chars.append('"')
+                    if self.ch == '\\': # \\ \t \n
+                        self.__read_next_char()
+                        if self.ch in self.__string_characters:
+                            chars.append('\\')
+                            chars.append(self.ch)
+                        else:
+                            raise SyntaxErrorException("Unterminated String", loc)
                     else:
                         chars.append(self.ch)
                     self.__read_next_char()
