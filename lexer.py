@@ -190,24 +190,18 @@ class Lexer:
         Match the next token in input.
         :return: Token with information about the matched Tokentype.
         """
-        
+
         # Remove spaces, tabs, comments, and "empty" lines, if any, before matching the next Tokentype.
-        while self.ch == '#' or self.ch == ' ' or self.ch == '\t':
+        while self.ch == '#' or self.ch == ' ' or self.ch == '\t' or (self.ch == '\n' and self.beginning_of_logical_line):
             if self.ch == '#':
                 while self.ch != '\n':
                     self.__read_next_char()
             else:
                 self.__read_next_char()
-        while self.ch == '\n' and self.beginning_of_logical_line:
-            self.__read_next_char()
 
         # Record the start location of the lexeme we're matching.
 
         loc = Location(self.line, self.col)
-
-        # if self.within_string_literal:
-        #     chars = [self.ch]
-        #     token = Token(Tokentype.StringLiteral, ''.join(chars), loc)
 
         # Ensure indentation is correct, emitting (returning) an INDENT/DEDENT token if called for.
         if self.beginning_of_logical_line:
@@ -220,6 +214,8 @@ class Lexer:
                     token = Token(Tokentype.Dedent, 'DEDENT', loc)
                 self.beginning_of_logical_line = False
                 return token
+            else:
+                self.beginning_of_logical_line = False
 
         # Now, try to match a lexeme.
         if self.ch == '':
@@ -233,7 +229,6 @@ class Lexer:
                 token = Token(Tokentype.Arrow, '->', loc)
             else:
                 token = Token(Tokentype.OpMinus, self.ch, loc)
-
         elif self.ch == '*':
             token = Token(Tokentype.OpMultiply, self.ch, loc)
             self.__read_next_char()
@@ -268,6 +263,8 @@ class Lexer:
             self.__read_next_char()
             if self.ch == '=':
                 token = Token(Tokentype.OpNotEq, '!=', loc)
+            else:
+                token = Token(Tokentype.Unknown, self.ch, loc)
         elif self.ch == '(':
             token = Token(Tokentype.ParenthesisL, '(', loc)
             self.__read_next_char()
@@ -301,14 +298,21 @@ class Lexer:
             while self.ch != '"':
                 if self.ch == '\n':
                     raise SyntaxErrorException("Unterminated String", loc)
+                elif not self.ch.isascii():
+                    raise SyntaxErrorException("Strings contains unaccepted characters", loc)
                 else:
-                    if self.ch == '\\': # \\ \t \n
+                    if self.ch == '\\':     # \\ \t \n \"
                         self.__read_next_char()
-                        if self.ch in self.__string_characters:
+                        if self.ch == "\\":
                             chars.append('\\')
-                            chars.append(self.ch)
+                        elif self.ch == "n":
+                            chars.append('\n')
+                        elif self.ch == "t":
+                            chars.append('\t')
+                        elif self.ch == "\"":
+                            chars.append('\"')
                         else:
-                            raise SyntaxErrorException("Unterminated String", loc)
+                            raise SyntaxErrorException("Ill formed escape character", loc)
                     else:
                         chars.append(self.ch)
                     self.__read_next_char()
@@ -327,6 +331,7 @@ class Lexer:
                     self.__read_next_char()
 
                 keyword = ''.join(chars)
+
                 if keyword in self.__reserved_words:
                     token = Token(self.__reserved_words[keyword], keyword, loc)
                 else:
