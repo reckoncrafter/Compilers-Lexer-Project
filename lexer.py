@@ -212,7 +212,10 @@ class Lexer:
                 else:
                     self.legal_indent_levels.pop()
                     token = Token(Tokentype.Dedent, 'DEDENT', loc)
-                self.beginning_of_logical_line = False
+
+                # if now we did pop enough and arrived at the right indentation
+                if loc.col == self.legal_indent_levels[-1]:
+                    self.beginning_of_logical_line = False
                 return token
             else:
                 self.beginning_of_logical_line = False
@@ -347,7 +350,6 @@ class Lexer:
                 while self.ch.isdigit():
                     chars.append(self.ch)
                     self.__read_next_char()
-
 
                 if int(''.join(chars)) > 2147483647:
                     raise SyntaxErrorException("Int too big", loc)

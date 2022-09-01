@@ -5,7 +5,7 @@
 
 import lexer
 
-filename = 'main.py'
+filename = 'test.py'
 with open(filename) as f:
     lex = lexer.Lexer(f)
     token = lex.next()

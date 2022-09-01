@@ -3,12 +3,13 @@
 
 
 
-    3
+        3
+        3
+    
+
 
 cc = 12076463
-c = "ciao
-
-z = 2
+c = "ciao"
 
 class MyClass:
     def method(self: "MyClass")
@@ -17,15 +18,6 @@ def wat(cx):
     while cx < 1:
         zx = "ciao\"eh"
 
-
-_ = 0
-idd = 0
-\\
-//
-+-*//%
-<><=>===!==
-() [],:.->
-
 if z == 0:
     x = 0
     if x == 0:
@@ -33,4 +25,17 @@ if z == 0:
         d = 0
         z = 0
     c = 'h'
+
 print(c)
+
+import lexer
+
+filename = 'test.py'
+with open(filename) as f:
+    lex = lexer.Lexer(f)
+    token = lex.next()
+    while token.type != lexer.Tokentype.EOI:
+        print(token.type, token.lexeme if token.type != lexer.Tokentype.Newline else "\\n", token.location.line)
+        token = lex.next()
+
+n = 0
