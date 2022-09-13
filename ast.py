@@ -6,6 +6,12 @@ class Operator(Enum):
     Minus = 1
     Gt = 2
     Lt = 3
+    Eq = 4
+    GtEq = 5
+    LtEq = 6
+    Multiply = 7
+    Divide = 8
+    Modulus = 9
 
 
 class Node:

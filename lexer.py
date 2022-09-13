@@ -143,13 +143,6 @@ class Lexer:
         "False": Tokentype.BoolFalseLiteral
     }
 
-    __string_characters = {
-        "\\",
-        "n",
-        "t",
-        "\""
-    }
-
     def __read_next_char(self):
         """
         Private helper routine. Reads the next input character, while keeping
@@ -167,9 +160,9 @@ class Lexer:
         self.ch = self.f.read(1)
 
         if not self.ch:  # eof
-            self.ch = '\n'
-            self.line += 1
-            self.col = 1
+        #    self.ch = ' '
+        #    self.line += 1
+        #    self.col = 1
             self.eof = True
 
     def __init__(self, f):
@@ -244,7 +237,7 @@ class Lexer:
         elif self.ch == '=':
             self.__read_next_char()
             if self.ch == '=':
-                token = Token(Tokentype.OpEq, self.ch, loc)
+                token = Token(Tokentype.OpEq, '==', loc)
                 self.__read_next_char()
             else:
                 token = Token(Tokentype.OpAssign, '=', loc)

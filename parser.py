@@ -10,6 +10,7 @@ class Parser:
 
     # Helper function.
     def match(self, type):
+        print(self.token.type)
         if self.token.type == type:
             self.token = self.lexer.next()
         else:
@@ -47,8 +48,10 @@ class Parser:
     # f[3](6,7) NOT OK in ChocoPy
 
     # cexpr     -> aexpr rel_op aexpr | aexpr
+
     # rel_op    -> == | != | ... | is
     # aexpr     -> aexpr add_op mexpr | mexpr
+
     # add_op    -> + | -
     # mexpr     -> mexpr mul_op uexpr | uexpr
     # mul_op    -> * | // | %
@@ -58,10 +61,74 @@ class Parser:
     # fexpr     -> ...
 
     # cexpr     -> aexpr [ rel_op aexpr ]
+    def cexpr(self):
+        opmap = {Tokentype.OpGt: ast.Operator.Gt,
+            Tokentype.OpLt: ast.Operator.Lt,
+            Tokentype.OpEq: ast.Operator.Eq,
+            Tokentype.OpGtEq: ast.Operator.GtEq,
+            Tokenrtype.OpLtEq: ast.Operator.LtEq}
+        node = self.aexpr()
+
+        if self.token.type in opmap.keys():
+            op = opmap[self.token.type]
+            self.match(self.token.type) # rel_op
+            rhs = self.aexpr()
+            node = ast.BinaryOpNode(op, node, rhs)
+        return node
+
     # aexpr     -> mexpr { add_op mexpr }
+    def aexpr(self):
+        #ops = [Tokentype.OpPlus, Tokentype.OpMinus]
+        opmap = {Tokentype.OpPlus: ast.Operator.Plus,
+                 Tokentype.OpMinus: ast.Operator.Minus}
+        node = self.mexpr()
+
+        if self.token.type in opmap.keys():
+            op = opmap[self.token.type]
+            self.match(self.token.type) # add_op
+            rhs = self.mexpr()
+            node = ast.BinaryOpNode(op, node, rhs)
+        return node
+
     # mexpr     -> uexpr { mul_op uexpr }
+    def mexpr(self):
+        opmap = {Tokentype.OpMultiply: ast.Operator.Multiply,
+                 Tokentype.OpIntDivide: ast.Operator.Divide,
+                 Tokentype.OpModulus: ast.Operator.Modulus,}
+        node = self.uexpr()
+
+        if self.token.type in opmap.keys():
+            op = opmap[self.token.type]
+            self.match(self.token.type) # mul_op
+            rhs = self.uexpr()
+            node = ast.BinaryOpNode(op, node, rhs)
+        return node
+    # uexpr     -> - uexpr | mi_expr
+    def uxepr(self):
+        if self.match_if(Tokentype.OpMinus):
+            child = self.uexpr()
+            op = self.token.type
+            node = ast.UnaryOpNode(op, child)
+        else:
+            node = self.mi_expr()
+        return node
     # mi_expr   -> fexpr { . i_or_f | '[' expr ']' }
+    def mi_expr(self):
+        node = self.fexpr()
+        if self.match_if(Tokentype.Period):
+            node = self.i_or_f()
+        if self.match_if(Tokentype.BracketL):
+            node = self.expr()
+            self.match(Tokentype.BracketR)
+    
     # i_or_f    -> ID [ '(' arguments ')' ]
+    def i_or_f(self):
+        if self.match_if(Tokentype.Identifier):
+            if self.match_if(Tokentype.ParenthesisL):
+                node = self.arguments()
+                self.match(Tokentype.ParenthesisR)
+            lexeme = self.token.lexeme
+            return 
 
     # Exercise:   1 + 2 > 5 - 4
     #
@@ -73,18 +140,20 @@ class Parser:
     # rel_op    -> > | <
     # aexpr     -> INT { add_op INT }
     # add_op    -> + | -
-    def sexpr(self):
-        opmap = {Tokentype.OpGt: ast.Operator.Gt,
-                 Tokentype.OpLt: ast.Operator.Lt}
-        node = self.aexpr()
 
-        if self.token.type in opmap.keys():
-            op = opmap[self.token.type]
-            self.match(self.token.type)
-            rhs = self.aexpr()
-            node = ast.BinaryOpNode(op, node, rhs)
+    # def sexpr(self):
+    #     opmap = {Tokentype.OpGt: ast.Operator.Gt,
+    #              Tokentype.OpLt: ast.Operator.Lt,
+    #              Tokentype.OpEq: ast.Operator.Eq}
+    #     node = self.aexpr()
 
-        return node
+    #     if self.token.type in opmap.keys():
+    #         op = opmap[self.token.type]
+    #         self.match(self.token.type)
+    #         rhs = self.aexpr()
+    #         node = ast.BinaryOpNode(op, node, rhs)
+
+    #     return node
 
     def aexpr(self):
         ops = [Tokentype.OpPlus, Tokentype.OpMinus]
@@ -93,7 +162,6 @@ class Parser:
         lexeme = self.token.lexeme
         self.match(Tokentype.IntegerLiteral)
         node = ast.IntegerLiteral(int(lexeme))
-        print('here')
         while self.token.type in ops:
             op = opmap[self.token.type]
             self.match(self.token.type)
