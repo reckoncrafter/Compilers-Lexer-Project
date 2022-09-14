@@ -34,33 +34,38 @@ class Parser:
         self.match(Tokentype.EOI)
         return node
 
+    #def peek(self):
+
     # CHOCOPY FULL REFERENCE GRAMMAR
 
-    stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile}
+    stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile, Tokentype.KwPass}
     simple_stmt_keywords = {Tokentype.KwPass, Tokentype.KwReturn}
 
     # program ::= [[ var def | func def | class def ]]∗ stmt∗
     def program(self):
+        print("program()")
         while self.token.type in {Tokentype.KwDef, Tokentype.KwClass, Tokentype.Identifier}:
             if self.token.type == Tokentype.KwDef:
                 self.func_def()
             elif self.token.type == Tokentype.KwClass:
                 self.class_def()
-            elif self.peek() == Tokentype.Colon:
+           #elif self.peek() == Tokentype.Colon:
+            elif self.token.type == Tokentype.Identifier:
                 # implement peek()
                 # The colon is used for type annotations after the identifier. i.e "var : int = ..."
                 self.var_def()
-        while self.token.type in stmt_keywords:
+        while self.token.type in self.stmt_keywords:
             self.stmt()
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
+        print("class_def()")
         self.match(Tokentype.KwClass)
         self.match(Tokentype.Identifier)
 
-        self.match(Tokentype.ParenthesisL)
-        self.match(Tokentype.Identifier)
-        self.match(Tokentype.ParenthesisR)
+        # self.match(Tokentype.ParenthesisL)
+        # self.match(Tokentype.Identifier)
+        # self.match(Tokentype.ParenthesisR)
 
         self.match(Tokentype.Colon)
         self.match(Tokentype.Newline)
@@ -73,6 +78,7 @@ class Parser:
     # class body ::= pass NEWLINE
     # | [[var def | func def ]]+
     def class_body(self):
+        print("class_body()")
         if self.token.type == Tokentype.KwPass:
             self.match(Tokentype.Newline)
 
@@ -87,11 +93,12 @@ class Parser:
     
     # func def ::= def ID ( [[typed var [[, typed var ]]∗]]? ) [[-> type]]? : NEWLINE INDENT func body DEDENT
     def func_def(self):
+        print("func_def()")
         self.match(Tokentype.KwDef)
         self.match(Tokentype.Identifier)
 
         self.match(Tokentype.ParenthesisL)
-        if self.peek != Tokentype.ParenthesisR:
+        if self.token.type != Tokentype.ParenthesisR:
             self.typed_var()
             while self.token.type == Tokentype.Comma:
                 self.typed_var()
@@ -111,6 +118,7 @@ class Parser:
         
     # func body ::= [[global decl | nonlocal decl | var def | func def ]]∗ stmt+
     def func_body(self):
+        print("func_body()")
         while self.token.type in {Tokentype.KwGlobal, Tokentype.KwNonLocal, Tokentype.Identifier, Tokentype.KwDef}:
             if self.token.type == Tokentype.KwGlobal:
                 self.global_decl()
@@ -121,43 +129,50 @@ class Parser:
             elif self.token.type == Tokentype.KwDef:
                 self.func_def()
 
-        if self.token.type not in stmt_keywords:
-            raise(SyntaxErrorException)
-        while self.token.type in stmt_keywords:
+        if self.token.type not in self.stmt_keywords:
+            raise(SyntaxError("Statement keyword missing"))
+        while self.token.type in self.stmt_keywords:
             self.stmt()
         
     # typed var ::= ID : type
     def typed_var(self):
+        print("typed_var()")
         self.match(Tokentype.Identifier)
-        self.match(Tokentype.Colon)
-        self._type()
+        if self.token.type == Tokentype.Colon:
+            self.match(Tokentype.Colon)
+            self._type()
     
     # type ::= ID | IDSTRING | [ type ]
     def _type(self):
+        print("_type()")
         # Need to define IDSTRING, and primitive types
         if self.token.type == Tokentype.Identifier:
             self.match(Tokentype.Identifier)
         elif self.token.type == Tokentype.StringLiteral:
             self.match(Tokentype.StringLiteral)
         else:
-            raise(SyntaxErrorException)
+            raise(SyntaxError("Invalid type annotation"))
         
     # global decl ::= global ID NEWLINE
     def global_decl(self):
+        print("global_decl()")
         self.match(Tokentype.KwGlobal)
         self.match(Tokentype.Identifier)
         self.match(Tokentype.Newline)
 
     # nonlocal decl ::= nonlocal ID NEWLINE
     def nonlocal_decl(self):
+        print("nonlocal_decl()")
         self.match(Tokentype.KwNonLocal)
         self.match(Tokentype.Identifier)
         self.match(Tokentype.Newline)
     
     # var def ::= typed var = literal NEWLINE
     def var_def(self):
+        print("var_def()")
         self.typed_var()
         self.match(Tokentype.OpAssign)
+        self.literal()
         self.match(Tokentype.Newline)
 
     # stmt ::= simple stmt NEWLINE
@@ -165,10 +180,14 @@ class Parser:
     # | while expr : block
     # | for ID in expr : block
     def stmt(self):
-        if self.token.type == Tokentype.KwPass:
+        print("stmt()")
+        try:
             self.simple_stmt()
             self.match(Tokentype.Newline)
-        elif self.token.type == Tokentype.KwIf:
+        except:
+            pass
+        
+        if self.token.type == Tokentype.KwIf:
             self.match(Tokentype.KwIf)
             self.expr()
             self.match(Tokentype.Colon)
@@ -192,13 +211,14 @@ class Parser:
             self.match(Tokentype.Colon)
             self.block()
         else:
-            raise(SyntaxErrorException)
+            raise(SyntaxError("Invalid statement"))
 
     # simple stmt ::= pass
     # | expr
     # | return [[expr]]?
     # | [[target = ]]+ expr
     def simple_stmt(self):
+        print("simple_stmt()")
         if self.token.type == Tokentype.KwPass:
             self.match(Tokentype.KwPass)
         elif self.token.type == Tokentype.KwReturn:
@@ -215,11 +235,12 @@ class Parser:
 
     # block ::= NEWLINE INDENT stmt+ DEDENT
     def block(self):
+        print("block()")
         self.match(Tokentype.Newline)
         self.match(Tokentype.Indent)
-        if self.token.type not in stmt_keywords:
+        if self.token.type not in self.stmt_keywords:
             raise(SyntaxErrorException)
-        while self.token.type in stmt_keywords:
+        while self.token.type in self.stmt_keywords:
             self.stmt()
         self.match(Tokentype.Dedent)
     
@@ -229,6 +250,7 @@ class Parser:
     # | INTEGER
     # | IDSTRING | STRING
     def literal(self):
+        print("literal()")
         if self.token.type == Tokentype.KwNone:
             self.match(Tokentype.KwNone)
         elif self.token.type == Tokentype.BoolTrueLiteral:
@@ -240,12 +262,14 @@ class Parser:
         elif self.token.type == Tokentype.StringLiteral:
             # Define IDSTRING
             self.match(Tokentype.StringLiteral)
+        
     
     # expr ::= cexpr
     # | not expr
     # | expr [[and | or]] expr
     # | expr if expr else expr
     def expr(self):
+        print("expr()")
         if self.token.type == Tokentype.OpNot:
             self.match(Tokentype.OpNot)
             self.expr()
@@ -272,6 +296,7 @@ class Parser:
     # | cexpr bin op cexpr
     # | - cexpr
     def cexpr(self):
+        print("cexpr()")
         if self.token.type == Tokentype.Identifier:
             self.match(Tokentype.Identifier)
             if self.token.type == Tokentype.ParenthesisL:
@@ -339,7 +364,7 @@ class Parser:
             self.cexpr()
             return
 
-        raise(SyntaxErrorException)
+        raise(SyntaxError("???"))
 
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
     bin_ops = {Tokentype.OpPlus, Tokentype.OpMinus, Tokentype.OpMultiply,
@@ -347,19 +372,22 @@ class Parser:
                Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq,
                Tokentype.OpLt, Tokentype.OpGt, Tokentype.OpIs}
     def bin_op(self):
-        if self.token.type in bin_ops:
+        print("bin_op()")
+        if self.token.type in self.bin_ops:
             ... # "Surely now we will both drown", said the frog.
                 # "lol", said the scorpion, "lmao".
             return
         
     # member expr ::= cexpr . ID
     def member_expr(self):
+        print("member_expr()")
         self.cexpr()
         self.match(Tokentype.Period)
         self.match(Tokentype.Identifier)
 
     # index expr ::= cexpr [ expr ]
     def index_expr(self):
+        print("index_expr()")
         self.cexpr()
         self.match(Tokentype.BracketL)
         self.expr()
@@ -369,6 +397,7 @@ class Parser:
     # | member expr
     # | index expr
     def target(self):
+        print("target()")
         if self.token.type == Tokentype.Identifier:
             self.match(Tokentype.Identifier)
             return
