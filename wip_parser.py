@@ -37,6 +37,8 @@ class Parser:
     # CHOCOPY FULL REFERENCE GRAMMAR
 
     # program ::= [[ var def | func def | class def ]]∗ stmt∗
+    stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile}
+
     def program(self):
         while self.token.type in {Tokentype.KwDef, Tokentype.KwClass, Tokentype.Identifier}:
             if self.token.type == Tokentype.KwDef:
@@ -47,7 +49,8 @@ class Parser:
                 # implement peek()
                 # The colon is used for type annotations after the identifier. i.e "var : int = ..."
                 self.var_def()
-        self.stmt()
+        while self.token.type in stmt_keywords:
+            self.stmt()
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
@@ -71,6 +74,10 @@ class Parser:
     def class_body(self):
         if self.token.type == Tokentype.KwPass:
             self.match(Tokentype.Newline)
+
+        if self.token.type not in {Tokentype.Identifier, Tokentype.KwDef}: 
+            raise(SyntaxErrorException) # need at least one
+        
         while self.token.type in {Tokentype.Identifier, Tokentype.KwDef}:
             if self.token.type == Tokentype.Identifier:
                 self.var_def()
@@ -101,10 +108,42 @@ class Parser:
 
         self.match(Tokentype.Dedent)
         
-    # func body ::= Jglobal decl | nonlocal decl | var def | func def K∗ stmt+
+    # func body ::= [[global decl | nonlocal decl | var def | func def ]]∗ stmt+
+    def func_body(self):
+        while self.token.type in {Tokentype.KwGlobal, Tokentype.KwNonLocal, Tokentype.Identifier, Tokentype.KwDef}:
+            if self.token.type == Tokentype.KwGlobal:
+                self.global_decl()
+            elif self.token.type == Tokentype.KwNonLocal:
+                self.nonlocal_decl()
+            elif self.token.type == Tokentype.Identifier:
+                self.var_def()
+            elif self.token.type == Tokentype.KwDef:
+                self.func_def()
+
+        if self.token.type not in stmt_keywords:
+            raise(SyntaxErrorException)
+        while self.token.type in stmt_keywords:
+            self.stmt()
+        
     # typed var ::= ID : type
+    def typed_var(self):
+        self.match(Tokentype.Identifier)
+        self.match(Tokentype.Colon)
+        self._type()
+    
     # type ::= ID | IDSTRING | [ type ]
+    def _type(self):
+        # Need to define IDSTRING, and primitive types
+        if self.token.type == Tokentype.Identifier:
+            self.match(Tokentype.Identifier)
+        elif self.token.type == Tokentype.StringLiteral:
+            self.match(Tokentype.StringLiteral)
+        else:
+            raise(SyntaxErrorException)
+        
     # global decl ::= global ID NEWLINE
+    def global_decl(self):
+        
     # nonlocal decl ::= nonlocal ID NEWLINE
     # var def ::= typed var = literal NEWLINE
     # stmt ::= simple stmt NEWLINE
