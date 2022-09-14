@@ -267,17 +267,122 @@ class Parser:
     # | ( expr )
     # | member expr
     # | index expr
-    # | member expr ( Jexpr J, expr K∗K? )
-    # | ID ( Jexpr J, expr K∗K? )
+    # | member expr ( [[expr [[, expr ]]∗]]? )
+    # | ID ( [[expr [[, expr ]]∗]]? )
     # | cexpr bin op cexpr
     # | - cexpr
+    def cexpr(self):
+        if self.token.type == Tokentype.Identifier:
+            self.match(Tokentype.Identifier)
+            if self.token.type == Tokentype.ParenthesisL:
+                self.match(Tokentype.ParenthesisL)
+                if self.token.type != Tokentype.ParenthesisR:
+                    self.expr()
+                    while self.token.type == Tokentype.Comma:
+                        self.expr()
+                self.match(Tokentype.ParenthesisR)
+            return
+
+        try:
+            self.literal()
+        except:
+            pass
+        else:
+            return
+        
+        if self.token.type == Tokentype.BracketL:
+            self.match(Tokentype.BracketL)
+            if self.token.type != Tokentype.BracketR:
+                self.expr()
+                while self.token.type == Tokentype.Comma:
+                    self.expr()
+            self.match(Tokentype.BracketR)
+            return
+
+        if self.token.type == Tokentype.ParenthesisL:
+            self.match(Tokentype.ParenthesisL)
+            self.expr()
+            self.match(Tokentype.ParenthesisR)
+            return
+        
+        try:
+            self.member_expr()
+        except:
+            pass
+        else:
+            if self.token.type == Tokentype.ParenthesisL:
+                self.match(Tokentype.ParenthesisL)
+                if self.token.type != Tokentype.ParenthesisR:
+                    self.expr()
+                    while self.token.type == Tokentype.Comma:
+                        self.expr()
+                self.match(Tokentype.ParenthesisR)
+            return
+
+        try:
+            self.index_expr()
+        except:
+            pass
+        else:
+            return
+
+        try:
+            self.cexpr()
+        except:
+            pass
+        else:
+            self.bin_op()
+            self.cexpr()
+            return
+        
+        if self.token.type == Tokentype.OpMinus:
+            self.cexpr()
+            return
+
+        raise(SyntaxErrorException)
 
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
-
+    bin_ops = {Tokentype.OpPlus, Tokentype.OpMinus, Tokentype.OpMultiply,
+               Tokentype.OpIntDivide, Tokentype.OpModulus, Tokentype.OpEq,
+               Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq,
+               Tokentype.OpLt, Tokentype.OpGt, Tokentype.OpIs}
+    def bin_op(self):
+        if self.token.type in bin_ops:
+            ... # "Surely now we will both drown", said the frog.
+                # "lol", said the scorpion, "lmao".
+            return
+        
     # member expr ::= cexpr . ID
+    def member_expr(self):
+        self.cexpr()
+        self.match(Tokentype.Period)
+        self.match(Tokentype.Identifier)
 
     # index expr ::= cexpr [ expr ]
+    def index_expr(self):
+        self.cexpr()
+        self.match(Tokentype.BracketL)
+        self.expr()
+        self.match(Tokentype.BracketR)
 
     # target ::= ID
     # | member expr
     # | index expr
+    def target(self):
+        if self.token.type == Tokentype.Identifier:
+            self.match(Tokentype.Identifier)
+            return
+
+        try:
+            self.member_expr()
+        except:
+            pass
+        else:
+            return
+
+        try:
+            self.index_expr()
+        except:
+            raise(SyntaxErrorException)
+        else:
+            return
