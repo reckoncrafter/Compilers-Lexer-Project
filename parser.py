@@ -29,7 +29,7 @@ class Parser:
     # Finish implementing the parser. A call to parse, parses a single Boolean expression.
     # The file should return an AST if parsing is successful, otherwise a syntax-error exception is thrown.
     def parse(self):
-        node = self.sexpr()
+        node = self.cexpr()
         print(node)
         self.match(Tokentype.EOI)
         return node
@@ -40,6 +40,53 @@ class Parser:
     #      +  3             2  3
     #     /\
     #    1  2
+
+    # CHOCOPY FULL REFERENCE GRAMMAR
+    # program ::= Jvar def | func def | class def K∗ stmt∗
+    # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
+    # class body ::= pass NEWLINE
+    # | Jvar def | func def K+
+    # func def ::= def ID ( Jtyped var J, typed var K∗K? ) J-> typeK? : NEWLINE INDENT func body DEDENT
+    # func body ::= Jglobal decl | nonlocal decl | var def | func def K∗ stmt+
+    # typed var ::= ID : type
+    # type ::= ID | IDSTRING | [ type ]
+    # global decl ::= global ID NEWLINE
+    # nonlocal decl ::= nonlocal ID NEWLINE
+    # var def ::= typed var = literal NEWLINE
+    # stmt ::= simple stmt NEWLINE
+    # | if expr : block Jelif expr : block K∗ Jelse : block K?
+    # | while expr : block
+    # | for ID in expr : block
+    # simple stmt ::= pass
+    # | expr
+    # | return Jexpr K?
+    # | J target = K+ expr
+    # block ::= NEWLINE INDENT stmt+ DEDENT
+    # literal ::= None
+    # | True
+    # | False
+    # | INTEGER
+    # | IDSTRING | STRING
+    # expr ::= cexpr
+    # | not expr
+    # | expr Jand | orK expr
+    # | expr if expr else expr
+    # cexpr ::= ID
+    # | literal
+    # | [ Jexpr J, expr K∗K? ]
+    # | ( expr )
+    # | member expr
+    # | index expr
+    # | member expr ( Jexpr J, expr K∗K? )
+    # | ID ( Jexpr J, expr K∗K? )
+    # | cexpr bin op cexpr
+    # | - cexpr
+    # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
+    # member expr ::= cexpr . ID
+    # index expr ::= cexpr [ expr ]
+    # target ::= ID
+    # | member expr
+    # | index expr
 
     #
     # foo.a.b.c(1,2).d[2].e(4,5)[3]  OK
@@ -66,7 +113,7 @@ class Parser:
             Tokentype.OpLt: ast.Operator.Lt,
             Tokentype.OpEq: ast.Operator.Eq,
             Tokentype.OpGtEq: ast.Operator.GtEq,
-            Tokenrtype.OpLtEq: ast.Operator.LtEq}
+            Tokentype.OpLtEq: ast.Operator.LtEq}
         node = self.aexpr()
 
         if self.token.type in opmap.keys():
@@ -104,7 +151,7 @@ class Parser:
             node = ast.BinaryOpNode(op, node, rhs)
         return node
     # uexpr     -> - uexpr | mi_expr
-    def uxepr(self):
+    def uexpr(self):
         if self.match_if(Tokentype.OpMinus):
             child = self.uexpr()
             op = self.token.type
@@ -128,7 +175,13 @@ class Parser:
                 node = self.arguments()
                 self.match(Tokentype.ParenthesisR)
             lexeme = self.token.lexeme
-            return 
+            node = ast.OpNode()
+            return node
+
+    def fexpr(self):
+        self.match(Tokentype.Identifier)
+        node = ast.Node()
+        return node
 
     # Exercise:   1 + 2 > 5 - 4
     #
@@ -155,18 +208,18 @@ class Parser:
 
     #     return node
 
-    def aexpr(self):
-        ops = [Tokentype.OpPlus, Tokentype.OpMinus]
-        opmap = {Tokentype.OpPlus: ast.Operator.Plus,
-                 Tokentype.OpMinus: ast.Operator.Minus}
-        lexeme = self.token.lexeme
-        self.match(Tokentype.IntegerLiteral)
-        node = ast.IntegerLiteral(int(lexeme))
-        while self.token.type in ops:
-            op = opmap[self.token.type]
-            self.match(self.token.type)
-            lexeme = self.token.lexeme
-            self.match(Tokentype.IntegerLiteral)
-            rhs = ast.IntegerLiteral(int(lexeme))
-            node = ast.BinaryOpNode(op, node, rhs)
-        return node
+    # def aexpr(self):
+    #     ops = [Tokentype.OpPlus, Tokentype.OpMinus]
+    #     opmap = {Tokentype.OpPlus: ast.Operator.Plus,
+    #              Tokentype.OpMinus: ast.Operator.Minus}
+    #     lexeme = self.token.lexeme
+    #     self.match(Tokentype.IntegerLiteral)
+    #     node = ast.IntegerLiteral(int(lexeme))
+    #     while self.token.type in ops:
+    #         op = opmap[self.token.type]
+    #         self.match(self.token.type)
+    #         lexeme = self.token.lexeme
+    #         self.match(Tokentype.IntegerLiteral)
+    #         rhs = ast.IntegerLiteral(int(lexeme))
+    #         node = ast.BinaryOpNode(op, node, rhs)
+    #     return node
