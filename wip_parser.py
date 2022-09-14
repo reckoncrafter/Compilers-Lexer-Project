@@ -36,9 +36,10 @@ class Parser:
 
     # CHOCOPY FULL REFERENCE GRAMMAR
 
-    # program ::= [[ var def | func def | class def ]]∗ stmt∗
     stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile}
+    simple_stmt_keywords = {Tokentype.KwPass, Tokentype.KwReturn}
 
+    # program ::= [[ var def | func def | class def ]]∗ stmt∗
     def program(self):
         while self.token.type in {Tokentype.KwDef, Tokentype.KwClass, Tokentype.Identifier}:
             if self.token.type == Tokentype.KwDef:
@@ -143,30 +144,126 @@ class Parser:
         
     # global decl ::= global ID NEWLINE
     def global_decl(self):
-        
+        self.match(Tokentype.KwGlobal)
+        self.match(Tokentype.Identifier)
+        self.match(Tokentype.Newline)
+
     # nonlocal decl ::= nonlocal ID NEWLINE
+    def nonlocal_decl(self):
+        self.match(Tokentype.KwNonLocal)
+        self.match(Tokentype.Identifier)
+        self.match(Tokentype.Newline)
+    
     # var def ::= typed var = literal NEWLINE
+    def var_def(self):
+        self.typed_var()
+        self.match(Tokentype.OpAssign)
+        self.match(Tokentype.Newline)
+
     # stmt ::= simple stmt NEWLINE
-    # | if expr : block Jelif expr : block K∗ Jelse : block K?
+    # | if expr : block [[elif expr : block ]]∗ [[else : block ]]?
     # | while expr : block
     # | for ID in expr : block
+    def stmt(self):
+        if self.token.type == Tokentype.KwPass:
+            self.simple_stmt()
+            self.match(Tokentype.Newline)
+        elif self.token.type == Tokentype.KwIf:
+            self.match(Tokentype.KwIf)
+            self.expr()
+            self.match(Tokentype.Colon)
+            self.block()
+            while self.token.type == Tokentype.KwElif:
+                self.expr()
+                self.match(Tokentype.Colon)
+                self.block()
+            if self.token.type == Tokentype.KwElse:
+                self.block()
+        elif self.token.type == Tokentype.KwWhile:
+            self.match(Tokentype.KwWhile)
+            self.expr()
+            self.match(Tokentype.Colon)
+            self.block()
+        elif self.token.type == Tokentype.KwFor:
+            self.match(Tokentype.KwFor)
+            self.match(Tokentype.Identifier)
+            self.match(Tokentype.OpIn)
+            self.expr()
+            self.match(Tokentype.Colon)
+            self.block()
+        else:
+            raise(SyntaxErrorException)
+
     # simple stmt ::= pass
     # | expr
-    # | return Jexpr K?
-    # | J target = K+ expr
+    # | return [[expr]]?
+    # | [[target = ]]+ expr
+    def simple_stmt(self):
+        if self.token.type == Tokentype.KwPass:
+            self.match(Tokentype.KwPass)
+        elif self.token.type == Tokentype.KwReturn:
+            self.match(Tokentype.KwReturn)
+            if self.token.type != Tokentype.Newline:
+                self.expr()
+        elif self.token.type == Tokentype.Identifier:
+            while self.token.type == Tokentype.Identifier:
+                self.target()
+                self.match(Tokentype.OpAssign)
+            self.expr()
+        else:
+            self.expr()
+
     # block ::= NEWLINE INDENT stmt+ DEDENT
+    def block(self):
+        self.match(Tokentype.Newline)
+        self.match(Tokentype.Indent)
+        if self.token.type not in stmt_keywords:
+            raise(SyntaxErrorException)
+        while self.token.type in stmt_keywords:
+            self.stmt()
+        self.match(Tokentype.Dedent)
+    
     # literal ::= None
     # | True
     # | False
     # | INTEGER
     # | IDSTRING | STRING
+    def literal(self):
+        if self.token.type == Tokentype.KwNone:
+            self.match(Tokentype.KwNone)
+        elif self.token.type == Tokentype.BoolTrueLiteral:
+            self.match(Tokentype.BoolTrueLiteral)
+        elif self.token.type == Tokentype.BoolFalseLiteral:
+            self.match(Tokentype.BoolFalseLiteral)
+        elif self.token.type == Tokentype.IntegerLiteral:
+            self.match(Tokentype.IntegerLiteral)
+        elif self.token.type == Tokentype.StringLiteral:
+            # Define IDSTRING
+            self.match(Tokentype.StringLiteral)
+    
     # expr ::= cexpr
     # | not expr
-    # | expr Jand | orK expr
+    # | expr [[and | or]] expr
     # | expr if expr else expr
+    def expr(self):
+        if self.token.type == Tokentype.OpNot:
+            self.match(Tokentype.OpNot)
+            self.expr()
+        elif self.token.type == Tokentype.Identifier:
+            self.cexpr()
+        else:
+            self.expr()
+            if self.token.type == Tokentype.OpAnd:
+                self.match(Tokentype.OpAnd)
+                self.expr()
+            elif self.token.type == Tokentype.OpOr:
+                self.match(Tokentype.OpOr)
+                self.expr()
+
+    
     # cexpr ::= ID
     # | literal
-    # | [ Jexpr J, expr K∗K? ]
+    # | [ [[expr [[, expr ]]∗]]? ]
     # | ( expr )
     # | member expr
     # | index expr
@@ -174,9 +271,13 @@ class Parser:
     # | ID ( Jexpr J, expr K∗K? )
     # | cexpr bin op cexpr
     # | - cexpr
+
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
+
     # member expr ::= cexpr . ID
+
     # index expr ::= cexpr [ expr ]
+
     # target ::= ID
     # | member expr
     # | index expr
