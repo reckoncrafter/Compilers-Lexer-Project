@@ -1,0 +1,74 @@
+    # CHOCOPY FULL REFERENCE GRAMMAR
+    # program ::= Jvar def | func def | class def K∗ stmt∗
+
+
+    # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
+
+    # class body ::= pass NEWLINE
+    # | Jvar def | func def K+
+
+    # func def ::= def ID ( Jtyped var J, typed var K∗K? ) J-> typeK? : NEWLINE INDENT func body DEDENT
+
+    # func body ::= Jglobal decl | nonlocal decl | var def | func def K∗ stmt+
+
+    # typed var ::= ID : type
+    # type ::= ID | IDSTRING | [ type ]
+    # global decl ::= global ID NEWLINE
+    # nonlocal decl ::= nonlocal ID NEWLINE
+    # var def ::= typed var = literal NEWLINE
+
+
+    # stmt ::= simple stmt NEWLINE | if_stmt | while_stmt | for_stmt
+
+    # if_stmt ::= if expr : block elif_stmt else_stmt
+    # elif_Stmt ::== elif : block elif_stmt | eps
+    # else_stmt ::== else : block | eps
+
+    # while_stmt ::== while expr : block
+    # for_stmt ::== for ID in expr : block
+
+    # simple stmt ::= pass
+    # | expr
+    # | return [ expr ]?
+    # | [ target = ]+ expr
+
+    # target ::= ID
+    # | cexpr T1
+
+    # T1 ::== . ID | [ expr ]
+
+    # block ::= NEWLINE INDENT stmt+ DEDENT
+
+    # literal ::= None
+    # | True
+    # | False
+    # | INTEGER
+    # | IDSTRING | STRING
+
+    # expr ::== cexpr E0 | not expr
+
+    # E0 ::== E1 E0 | eps
+
+    # E1 ::== [and | or] expr
+    # | if expr else expr
+
+    # cexpr ::=
+    # | fexpr Z1
+    # | - cexpr
+
+    # Z1 ::== cexpr C1 Z1 | eps
+
+    # C1 ::== bin_op C2 | .ID G1 | [ expr ]
+
+    # C2 ::== cexpr
+
+    # G1 = ( [expr [, expr ]∗]? ) | eps
+
+    # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
+
+    # fexpr ::== ID F1
+    # | literal
+    # | [ [expr [, expr ]∗]? ]
+    # | ( expr )
+
+    # F1 ::== ( [expr [, expr ]∗]? ) | eps

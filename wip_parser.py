@@ -1,5 +1,5 @@
 from lexer import Lexer, Tokentype, SyntaxErrorException
-import ast
+import astree
 
 
 class Parser:
@@ -39,18 +39,21 @@ class Parser:
     # program ::= [[ var def | func def | class def ]]∗ stmt∗
     stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile}
 
-    def program(self):
+    def program(self, stmt_keywords=stmt_keywords):
+        dec = []
+        stmt = []
         while self.token.type in {Tokentype.KwDef, Tokentype.KwClass, Tokentype.Identifier}:
             if self.token.type == Tokentype.KwDef:
-                self.func_def()
+                dec.append(self.func_def())
             elif self.token.type == Tokentype.KwClass:
-                self.class_def()
+                dec.append(self.class_def())
             elif self.peek() == Tokentype.Colon:
                 # implement peek()
                 # The colon is used for type annotations after the identifier. i.e "var : int = ..."
-                self.var_def()
+                dec.append(self.var_def())
         while self.token.type in stmt_keywords:
-            self.stmt()
+            stmt.append(self.stmt())
+        return astree.ProgramNode(dec, stmt)
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
