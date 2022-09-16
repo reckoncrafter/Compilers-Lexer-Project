@@ -1,22 +1,13 @@
-1
-    2
-
-
-
-        3
-        3
-    
-
-
-cc = 12076463
-c = "ciao"
+cc : int = 12076463
+c : str = "ciao"
 
 class MyClass:
-    def method(self: "MyClass")
+    def method(self: "MyClass"):
+        pass
 
 def wat(cx):
     while cx < 1:
-        zx = "ciao\"eh"
+        zx : str = "ciao\"eh"
 
 if z == 0:
     x = 0

@@ -27,7 +27,6 @@
     # | for ID in expr : bloc}
 
     # simple stmt ::= pass
-
     # | return {expr }?
     # | expr
     # | { target = }+ expr <--- do this with backtrack
@@ -40,8 +39,14 @@
     # | INTEGER
     # | IDSTRING | STRING
 
+    # first_stmt = if, while, for, first_simplestmt
+    first_simplestmt = return, pass, first_expr
+    first_expr = if, not, first_cexpr
+    first_c_expr = -, first_fexpr
+    first_fexpr = ID, [, (, first_literal
+    first_literal = None, True, False, Integer, String, IDSTRING
 
-    expr ::= expr e_00_expr
+    expr ::= e_00_expr expr | eps
     e_00_expr ::= if e_00_expr else e_00_expr | e_01_expr
 
     e_01_expr - e_02_expr e_03_expr
