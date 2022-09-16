@@ -1,5 +1,5 @@
 from lexer import Lexer, Tokentype, SyntaxErrorException
-import astree
+import ast
 
 
 class Parser:
@@ -10,8 +10,27 @@ class Parser:
         self.token = self.lexer.next()
         self.token_peek = None
 
+        # first_stmt = if, while, for, first_simplestmt
+        # first_simplestmt = return, pass, first_expr
+        # first_expr = not, first_cexpr
+        # first_c_expr = -, first_fexpr
+        # first_fexpr = ID, [, (, first_literal
+        # first_literal = None, True, False, Integer, String, IDSTRING
+        self.bin_op_tokens = {Tokentype.OpPlus, Tokentype.OpMinus, Tokentype.OpMultiply, Tokentype.OpIntDivide, Tokentype.OpModulus,
+                        Tokentype.OpEq, Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq, Tokentype.OpLt, Tokentype.OpGt, Tokentype.OpIs}
+        self.first_literal_tokens = {Tokentype.KwNone, Tokentype.BoolFalseLiteral, Tokentype.BoolFalseLiteral, Tokentype.IntegerLiteral, Tokentype.StringLiteral}
+        self.first_fexpr_tokens = {Tokentype.Identifier, Tokentype.BracketL, Tokentype.ParenthesisL}.union(self.first_literal_tokens)
+        self.c_1_expr_tokens = {Tokentype.Period, Tokentype.BracketL}.union(self.bin_op_tokens)
+        self.first_cexpr_tokens = {Tokentype.OpMinus}.union(self.first_fexpr_tokens)
+        self.first_e_01_expr_tokens = {Tokentype.KwIf, Tokentype.OpNot}.union(self.first_cexpr_tokens)
+        self.first_expr_tokens = {Tokentype.OpNot}.union(self.first_cexpr_tokens)
+        self.first_simplestmt_tokens = {Tokentype.KwReturn, Tokentype.KwPass}.union(self.first_expr_tokens)
+        self.first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile}.union(self.first_simplestmt_tokens)
+
+
     # Helper function.
     def match(self, type):
+        print(self.token.type, self.token.lexeme)
         if self.token.type == type:
             if self.token_peek is None:
                 self.token = self.lexer.next()
@@ -35,7 +54,8 @@ class Parser:
     def peek(self):
         if self.token_peek is None:
             self.token_peek = self.lexer.next()
-        return self.token_peek
+            print("peek() at", self.token_peek)
+        return self.token_peek.type
 
 
     # Finish implementing the parser. A call to parse, parses a single Boolean expression.
@@ -56,12 +76,15 @@ class Parser:
     def program(self):
         print("program()")
         while self.token.type in {Tokentype.Identifier, Tokentype.KwDef, Tokentype.KwClass}:
-            if self.token.type == Tokentype.Identifier and self.peek() == Tokentype.Colon:
+            print(self.token.type)
+            if (self.token.type == Tokentype.Identifier) and (self.peek() == Tokentype.Colon):
                 self.var_def()
             elif self.token.type == Tokentype.KwDef:
                 self.func_def()
             elif self.token.type == Tokentype.KwClass:
                 self.class_def()
+            else:
+                raise(SyntaxErrorException("Something has confused the tokens", self.token.location))
         while self.token.type in self.first_stmt_tokens:
             self.stmt()
 
@@ -215,7 +238,7 @@ class Parser:
                 self.match(Tokentype.Colon)
                 self.block()
         elif self.token.type == Tokentype.KwWhile:
-            self.match(Tokenetype.KwWhile)
+            self.match(Tokentype.KwWhile)
             self.expr()
             self.match(Tokentype.Colon)
             self.block()
@@ -238,6 +261,12 @@ class Parser:
             self.match(Tokentype.KwReturn)
             if self.token.type in self.first_expr_tokens:
                 self.expr()
+
+        ## TEST TARGET, ONLY IDENTIFIERS ##
+        elif self.token.type == Tokentype.Identifier:
+            self.match(Tokentype.Identifier)
+            self.match(Tokentype.OpAssign)
+            self.expr()
 
 
     # block ::= NEWLINE INDENT stmt+ DEDENT
@@ -270,24 +299,6 @@ class Parser:
         elif self.token.type == Tokentype.StringLiteral:
             self.match(Tokentype.StringLiteral)
 
-    # first_stmt = if, while, for, first_simplestmt
-    # first_simplestmt = return, pass, first_expr
-    # first_expr = not, first_cexpr
-    # first_c_expr = -, first_fexpr
-    # first_fexpr = ID, [, (, first_literal
-    # first_literal = None, True, False, Integer, String, IDSTRING
-    first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile, self.first_simplestmt_tokens}
-    first_simplestmt_tokens = {Tokentype.KwReturn, Tokentype.KwPass, self.first_expr_tokens}
-    first_expr_tokens = {Tokentype.OpNot, self.first_cexpr_tokens}
-    first_cexpr_tokens = {Tokentype.OpMinus, self.first_fexpr_tokens}
-    first_fexpr_tokens = {Tokentype.Identifier, Tokentype.BracketL, Tokentype.ParenthesisL, self.first_literal_tokens}
-    first_literal_tokens = {Tokentype.KwNone, Tokentype.BoolFalseLiteral, Tokentype.BoolFalseLiteral, Tokentype.IntegerLiteral, Tokentype.StringLiteral}
-    first_e_01_expr_tokens = {Tokentype.KwIf, Tokentype.OpNot, self.first_cexpr_tokens}
-
-    c_1_expr_tokens = {Tokentype.Period, Tokentype.BracketL, self.bin_op_tokens}
-    bin_op_tokens = {Tokentype.OpPlus, Tokentype.OpMinus, Tokentype.OpMultiply, Tokentype.OpIntDivide, Tokentype.OpModulus,
-                     Tokentype.OpEq, Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq, Tokentype.OpLt, Tokentype.OpGt, Tokentype.OpIs}
-
     # expr ::= e_01_expr e_000_expr
     def expr(self):
         print("expr()")
@@ -298,13 +309,14 @@ class Parser:
     # e_000_expr ::= e_00_expr e_000_expr | eps
     def e_000_expr(self):
         print("e_000_expr()")
-        if self.token.type in first_e_01_expr_tokens:
+        if self.token.type in self.first_e_01_expr_tokens:
             self.e_00_expr()
             self.e_000_expr()
         return
         
     # e_00_expr ::= if e_00_expr else e_00_expr | e_01_expr
     def e_00_expr(self):
+        print("e_00_expr()")
         if self.token.type == Tokentype.KwIf:
             self.match(Tokentype.KwIf)
             self.e_00_expr()
@@ -317,12 +329,14 @@ class Parser:
 
     # e_01_expr - e_02_expr e_03_expr
     def e_01_expr(self):
+        print("e_01_expr")
         self.e_02_expr()
         self.e_03_expr()
         return
 
     # e_03_expr - or e_02_expr e_03_expr | eps
     def e_03_expr(self):
+        print("e_03_expr()")
         if self.token.type == Tokentype.OpOr:
             self.match(Tokentype.OpOr)
             self.e_02_expr()
@@ -331,12 +345,14 @@ class Parser:
 
     # e_02_expr - e_04_expr e_05_expr
     def e_02_expr(self):
+        print("e_02_expr()")
         self.e_04_expr()
         self.e_05_expr()
         return
     
     # e_05_expr - and e_04_expr e_05_expr | eps
     def e_05_expr(self):
+        print("e_05_expr()")
         if self.token.type == Tokentype.OpAnd:
             self.match(Tokentype.OpAnd)
             self.e_04_expr()
@@ -345,6 +361,7 @@ class Parser:
 
     # e_04_expr - not e_04_expr | cexpr
     def e_04_expr(self):
+        print("e_04_expr()")
         if self.token.type == Tokentype.OpNot:
             self.match(Tokentype.OpNot)
             self.e_04_expr()
@@ -354,6 +371,7 @@ class Parser:
     # cexpr ::= fexpr c_0_expr
     # | - cexpr
     def cexpr(self):
+        print("cexpr()")
         if self.token.type == Tokentype.OpMinus:
             self.cexpr()
         else:
@@ -362,6 +380,7 @@ class Parser:
 
     # c_0_expr ::= c_1_expr c_0_expr | eps
     def c_0_expr(self):
+        print("c_0_expr()")
         if self.token.type in self.c_1_expr_tokens:
             self.c_1_expr()
             self.c_0_expr()
@@ -371,6 +390,7 @@ class Parser:
     # | [ expr ]
     # | bin op cexpr
     def c_1_expr(self):
+        print("c_1_expr()")
         if self.token.type in self.bin_op_tokens:
             self.bin_op()
             self.cexpr()
@@ -387,6 +407,7 @@ class Parser:
 
     # c_2_expr ::= ( {expr {, expr }∗}? ) | eps
     def c_2_expr(self):
+        print("c_2_expr()")
         if self.token.type == Tokentype.ParenthesisL:
             self.match(Tokentype.ParenthesisL)
             if self.token.type in self.first_expr_tokens:
@@ -399,6 +420,7 @@ class Parser:
 
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
     def bin_op(self):
+        print("bin_op()")
         self.match(self.token.type)
         return # bin_op node
 
@@ -406,6 +428,7 @@ class Parser:
     # target ::= ID
     # | cexpr target_1
     def target(self):
+        print("target()")
         if self.token.type == Tokentype.Identifier:
             self.match(Tokentype.Identifier)
             return # id
@@ -417,6 +440,7 @@ class Parser:
 
     # target_1 ::= .D | [expr]
     def target_1(self):
+        print("target_1()")
         if self.token.type == Tokentype.Period:
             self.match(Tokentype.Period)
             self.match(Tokentype.Identifier)
@@ -432,6 +456,7 @@ class Parser:
     # | [ {expr {, expr }∗}? ]
     # | ( expr )
     def fexpr(self):
+        print("fexpr()")
         if self.token.type == Tokentype.Identifier:
             self.match(Tokentype.Identifier)
             self.f_1_expr()
@@ -450,3 +475,14 @@ class Parser:
             self.match(Tokentype.ParenthesisR)
         else:
             raise(SyntaxErrorException("Invalid Expression", self.token.location))
+
+    # f_1_expr ::= ( {expr{, expr}*}? ) | eps
+    def f_1_expr(self):
+        print("f_1_expr()")
+        if self.token.type == Tokentype.ParenthesisL:
+            self.match(Tokentype.ParenthesisL)
+            if self.token.type in self.first_expr_tokens:
+                self.expr()
+                while self.token.type == Tokentype.Comma:
+                    self.expr()
+            self.match(Tokentype.ParenthesisR)
