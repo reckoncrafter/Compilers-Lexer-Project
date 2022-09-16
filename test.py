@@ -8,6 +8,7 @@ class MyClass:
 def wat(cx):
     while cx < 1:
         zx : str = "ciao\"eh"
+        zx = "reas"
 
 if z == 0:
     x = 0
