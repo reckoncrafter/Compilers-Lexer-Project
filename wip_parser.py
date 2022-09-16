@@ -10,7 +10,7 @@ class Parser:
 
     # Helper function.
     def match(self, type):
-        print(self.token.type)
+        print(self.token.type, self.token.lexeme)
         if self.token.type == type:
             self.token = self.lexer.next()
         else:
@@ -181,13 +181,10 @@ class Parser:
     # | for ID in expr : block
     def stmt(self):
         print("stmt()")
-        try:
+        if self.token.type in self.simple_stmt_keywords:
             self.simple_stmt()
-            self.match(Tokentype.Newline)
-        except:
-            pass
-        
-        if self.token.type == Tokentype.KwIf:
+            self.match(Tokentype.Newline)    
+        elif self.token.type == Tokentype.KwIf:
             self.match(Tokentype.KwIf)
             self.expr()
             self.match(Tokentype.Colon)
@@ -239,7 +236,7 @@ class Parser:
         self.match(Tokentype.Newline)
         self.match(Tokentype.Indent)
         if self.token.type not in self.stmt_keywords:
-            raise(SyntaxErrorException)
+            raise(SyntaxError("Invalid Block"))
         while self.token.type in self.stmt_keywords:
             self.stmt()
         self.match(Tokentype.Dedent)
@@ -249,6 +246,8 @@ class Parser:
     # | False
     # | INTEGER
     # | IDSTRING | STRING
+    literal_tokens = {Tokentype.KwNone, Tokentype.BoolFalseLiteral, Tokentype.BoolTrueLiteral, 
+                      Tokentype.StringLiteral, Tokentype.IntegerLiteral}
     def literal(self):
         print("literal()")
         if self.token.type == Tokentype.KwNone:
@@ -289,8 +288,8 @@ class Parser:
     # | literal
     # | [ [[expr [[, expr ]]∗]]? ]
     # | ( expr )
-    # | member expr
-    # | index expr
+    # | member expr // cexpr . ID
+    # | index expr // cexpr [expr]
     # | member expr ( [[expr [[, expr ]]∗]]? )
     # | ID ( [[expr [[, expr ]]∗]]? )
     # | cexpr bin op cexpr
@@ -306,16 +305,15 @@ class Parser:
                     while self.token.type == Tokentype.Comma:
                         self.expr()
                 self.match(Tokentype.ParenthesisR)
+            elif self.token.type in self.bin_ops:
+                self.bin_op()
+                self.cexpr()
             return
 
-        try:
+        elif self.token.type in self.literal_tokens:
             self.literal()
-        except:
-            pass
-        else:
-            return
         
-        if self.token.type == Tokentype.BracketL:
+        elif self.token.type == Tokentype.BracketL:
             self.match(Tokentype.BracketL)
             if self.token.type != Tokentype.BracketR:
                 self.expr()
@@ -324,47 +322,58 @@ class Parser:
             self.match(Tokentype.BracketR)
             return
 
-        if self.token.type == Tokentype.ParenthesisL:
+        elif self.token.type == Tokentype.ParenthesisL:
             self.match(Tokentype.ParenthesisL)
             self.expr()
             self.match(Tokentype.ParenthesisR)
             return
         
-        try:
-            self.member_expr()
-        except:
-            pass
-        else:
-            if self.token.type == Tokentype.ParenthesisL:
-                self.match(Tokentype.ParenthesisL)
-                if self.token.type != Tokentype.ParenthesisR:
-                    self.expr()
-                    while self.token.type == Tokentype.Comma:
-                        self.expr()
-                self.match(Tokentype.ParenthesisR)
+        elif self.token.type == Tokentype.Period:
+            while self.token.type == Tokentype.Period:
+                self.member_expr()
             return
 
-        try:
-            self.index_expr()
-        except:
-            pass
-        else:
+        elif self.token.type == Tokentype.BracketL:
+            while self.token.type == Tokentype.BracketL:
+                self.index_expr()
             return
 
-        try:
-            self.cexpr()
-        except:
-            pass
-        else:
-            self.bin_op()
-            self.cexpr()
-            return
+        # try:
+        #     self.member_expr()
+        # except:
+        #     pass
+        # else:
+        #     if self.token.type == Tokentype.ParenthesisL:
+        #         self.match(Tokentype.ParenthesisL)
+        #         if self.token.type != Tokentype.ParenthesisR:
+        #             self.expr()
+        #             while self.token.type == Tokentype.Comma:
+        #                 self.expr()
+        #         self.match(Tokentype.ParenthesisR)
+        #     return
+
+        # try:
+        #     self.index_expr()
+        # except:
+        #     pass
+        # else:
+        #     return
+
+        # try:
+        #     self.cexpr()
+        # except:
+        #     pass
+        # else:
+        #     self.bin_op()
+        #     self.cexpr()
+        #     return
         
-        if self.token.type == Tokentype.OpMinus:
+        elif self.token.type == Tokentype.OpMinus:
             self.cexpr()
             return
 
-        raise(SyntaxError("???"))
+        else:
+            raise(SyntaxError(str(self.token.type) + "???"))
 
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
     bin_ops = {Tokentype.OpPlus, Tokentype.OpMinus, Tokentype.OpMultiply,
@@ -376,20 +385,29 @@ class Parser:
         if self.token.type in self.bin_ops:
             ... # "Surely now we will both drown", said the frog.
                 # "lol", said the scorpion, "lmao".
+            if self.token.type == Tokentype.OpLt:
+                self.match(Tokentype.OpLt)
             return
         
-    # member expr ::= cexpr . ID
+    # # member expr ::= cexpr . ID
+    # member expr ::= [[. ID]]+
     def member_expr(self):
         print("member_expr()")
-        self.cexpr()
+        if self.token.type != Tokentype.Period():
+            return
         self.match(Tokentype.Period)
         self.match(Tokentype.Identifier)
+        self.member_expr()
 
-    # index expr ::= cexpr [ expr ]
+
+
+    # # index expr ::= cexpr [ expr ]
+
     def index_expr(self):
         print("index_expr()")
-        self.cexpr()
         self.match(Tokentype.BracketL)
+        if self.token.type == Tokentype.BracketL:
+            self.index_expr()
         self.expr()
         self.match(Tokentype.BracketR)
 
@@ -402,16 +420,25 @@ class Parser:
             self.match(Tokentype.Identifier)
             return
 
-        try:
+        elif self.token.type == Tokentype.Period:
             self.member_expr()
-        except:
-            pass
-        else:
+            return
+        
+        elif self.token.type == Tokentype.BracketL:
+            self.index_expr()
             return
 
-        try:
-            self.index_expr()
-        except:
-            raise(SyntaxErrorException)
-        else:
-            return
+
+        # try:
+        #     self.member_expr()
+        # except:
+        #     pass
+        # else:
+        #     return
+
+        # try:
+        #     self.index_expr()
+        # except:
+        #     raise(SyntaxErrorException)
+        # else:
+        #     return
