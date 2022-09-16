@@ -1,18 +1,23 @@
 from lexer import Lexer, Tokentype, SyntaxErrorException
-import ast
+import astree
 
 
 class Parser:
 
+
     def __init__(self, f):
         self.lexer = Lexer(f)
         self.token = self.lexer.next()
+        self.token_peek = None
 
     # Helper function.
     def match(self, type):
-        print(self.token.type, self.token.lexeme)
         if self.token.type == type:
-            self.token = self.lexer.next()
+            if self.token_peek is None:
+                self.token = self.lexer.next()
+            else:
+                self.token = self.token_peek
+                self.token_peek = None
         else:
             text = "Syntax error: expected {:s} but got {:s} ({:s}).".format(
                 type, self.token.type, self.token.lexeme
@@ -25,6 +30,13 @@ class Parser:
             self.match(type)
             return True
         return False
+
+    # Helper function (peek at the next token without (conceptually) consuming it.
+    def peek(self):
+        if self.token_peek is None:
+            self.token_peek = self.lexer.next()
+        return self.token_peek
+
 
     # Finish implementing the parser. A call to parse, parses a single Boolean expression.
     # The file should return an AST if parsing is successful, otherwise a syntax-error exception is thrown.
@@ -41,13 +53,29 @@ class Parser:
     stmt_keywords = {Tokentype.KwIf, Tokentype.KwFor, Tokentype.KwWhile, Tokentype.KwPass}
     simple_stmt_keywords = {Tokentype.KwPass, Tokentype.KwReturn}
 
+<<<<<<< HEAD
+    def program(self, stmt_keywords=stmt_keywords):
+        dec = []
+        stmt = []
+=======
     # program ::= [[ var def | func def | class def ]]∗ stmt∗
     def program(self):
         print("program()")
+>>>>>>> 1c3a8d0530483ef9715585c9b728a6def00eee8f
         while self.token.type in {Tokentype.KwDef, Tokentype.KwClass, Tokentype.Identifier}:
             if self.token.type == Tokentype.KwDef:
-                self.func_def()
+                dec.append(self.func_def())
             elif self.token.type == Tokentype.KwClass:
+<<<<<<< HEAD
+                dec.append(self.class_def())
+            elif self.peek() == Tokentype.Colon:
+                # implement peek()
+                # The colon is used for type annotations after the identifier. i.e "var : int = ..."
+                dec.append(self.var_def())
+        while self.token.type in stmt_keywords:
+            stmt.append(self.stmt())
+        return astree.ProgramNode(dec, stmt)
+=======
                 self.class_def()
            #elif self.peek() == Tokentype.Colon:
             elif self.token.type == Tokentype.Identifier:
@@ -56,6 +84,7 @@ class Parser:
                 self.var_def()
         while self.token.type in self.stmt_keywords:
             self.stmt()
+>>>>>>> 1c3a8d0530483ef9715585c9b728a6def00eee8f
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
