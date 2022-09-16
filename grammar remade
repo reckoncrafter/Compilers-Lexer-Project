@@ -1,41 +1,36 @@
     # CHOCOPY FULL REFERENCE GRAMMAR
-    # program ::= Jvar def | func def | class def K∗ stmt∗
+    # program ::= {var def | func def | class def }∗ stmt∗
 
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
 
     # class body ::= pass NEWLINE
-    # | Jvar def | func def K+
+    # | {var def | func def }+
 
-    # func def ::= def ID ( Jtyped var J, typed var K∗K? ) J-> typeK? : NEWLINE INDENT func body DEDENT
+    # func def ::= def ID ( {typed var {, typed var }∗}? ) {-> type}? : NEWLINE INDENT func body DEDENT
 
-    # func body ::= Jglobal decl | nonlocal decl | var def | func def K∗ stmt+
+    # func body ::= {global decl | nonlocal decl | var def | func def }∗ stmt+
 
     # typed var ::= ID : type
+
     # type ::= ID | IDSTRING | [ type ]
+
     # global decl ::= global ID NEWLINE
+
     # nonlocal decl ::= nonlocal ID NEWLINE
+
     # var def ::= typed var = literal NEWLINE
 
-
-    # stmt ::= simple stmt NEWLINE | if_stmt | while_stmt | for_stmt
-
-    # if_stmt ::= if expr : block elif_stmt else_stmt
-    # elif_Stmt ::== elif : block elif_stmt | eps
-    # else_stmt ::== else : block | eps
-
-    # while_stmt ::== while expr : block
-    # for_stmt ::== for ID in expr : block
+    # stmt ::= simple stmt NEWLINE
+    # | if expr : block {elif expr : block }∗ {else : block }?
+    # | while expr : bloc}
+    # | for ID in expr : bloc}
 
     # simple stmt ::= pass
+
+    # | return {expr }?
     # | expr
-    # | return [ expr ]?
-    # | [ target = ]+ expr
-
-    # target ::= ID
-    # | cexpr T1
-
-    # T1 ::== . ID | [ expr ]
+    # | { target = }+ expr <--- do this with backtrack
 
     # block ::= NEWLINE INDENT stmt+ DEDENT
 
@@ -45,30 +40,41 @@
     # | INTEGER
     # | IDSTRING | STRING
 
-    # expr ::== cexpr E0 | not expr
 
-    # E0 ::== E1 E0 | eps
+    expr ::= expr e_00_expr
+    e_00_expr ::= if e_00_expr else e_00_expr | e_01_expr
 
-    # E1 ::== [and | or] expr
-    # | if expr else expr
+    e_01_expr - e_02_expr e_03_expr
+    e_03_expr - or e_02_expr e_03_expr | eps
 
-    # cexpr ::=
-    # | fexpr Z1
+    e_02_expr - e_04_expr e_05_expr
+    e_05_expr - and e_04_expr e_05_expr | eps
+
+    e_04_expr - not e_04_expr | cexpr
+
+
+    # cexpr ::= fexpr c_0_expr
     # | - cexpr
 
-    # Z1 ::== cexpr C1 Z1 | eps
+    # c_0_expr ::= c_0_expr c_1_expr | eps
 
-    # C1 ::== bin_op C2 | .ID G1 | [ expr ]
+    # c_1_expr ::= . ID c_2_expr
+    # | [ expr ]
+    # | bin op cexpr
 
-    # C2 ::== cexpr
-
-    # G1 = ( [expr [, expr ]∗]? ) | eps
+    # c_2_expr ::= ( {expr {, expr }∗}? ) | eps
 
     # bin op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
 
-    # fexpr ::== ID F1
+
+    # target ::= ID
+    # | cexpr target_1
+
+    # target_1 ::= .D | [expr]
+
+    # fexpr ::= ID f_1_expr
     # | literal
-    # | [ [expr [, expr ]∗]? ]
+    # | [ {expr {, expr }∗}? ]
     # | ( expr )
 
-    # F1 ::== ( [expr [, expr ]∗]? ) | eps
+    # f_1_expr ::= ( {expr {, expr }∗}? ) | eps
