@@ -1,6 +1,7 @@
 def yesterday(yesterday : int) :
     sususu : int = 1
     summertime : string = "sadness"
+    yesterday()
     if sususu > 0 :
         print(stica)
     else :

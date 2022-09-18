@@ -309,6 +309,14 @@ class Parser:
         elif self.token.type in self.first_simplestmt_tokens:
             print('simple_stmt')
             node = self.simple_stmt()
+            targets = [node]
+            if node is (ast.MemberExprNode or ast.IndexExprNode or ast.IdentifierNode) and self.peek().type == Tokentype.OpAssign:
+                self.match(Tokentype.OpAssign)
+                node2 = self.expr()
+                while node2 is (ast.MemberExprNode or ast.IndexExprNode or ast.IdentifierNode) and self.peek().type == Tokentype.OpAssign:
+                    targets.append(node2)
+                    node2 = self.expr()
+                node = ast.AssignStmtNode(targets, node2)
             self.match(Tokentype.Newline)
         else:
             return None #this is wrong
@@ -489,38 +497,45 @@ class Parser:
             node = self.fexpr()
             if self.token.type in self.bin_op_tokens:
                 node = ast.BinaryOpExprNode(self.token.type, node, self.c_0_expr())
+            elif self.token.type == Tokentype.Period:
+                node = ast.MethodCallExprNode(node, self.c_0_expr()[0], self.c_0_expr()[1])
+            elif self.token.type == Tokentype.BracketL:
+                node = ast.IndexExprNode(node, self.c_0_expr())
             return node
 
-    # c_0_expr ::= c_1_expr c_0_expr | eps
+    # c_0_expr ::= . ID c_2_expr c_0_expr | [ expr ] c_0_expr | bin op cexpr c_0_expr | eps
+
+
     def c_0_expr(self):
         print("c_0_expr()")
         if self.token.type in self.c_1_expr_tokens:
-            node = self.c_1_expr()
-            self.c_0_expr()
+            lists = []
+            if self.token.type in self.bin_op_tokens:
+                while self.token.type in self.bin_op_tokens:
+                    self.bin_op()
+                    node2 = self.cexpr()
+                return node2
+            elif self.token.type == Tokentype.Period:
+                self.match(Tokentype.Period)
+                id_ = self.token.lexeme
+                self.match(Tokentype.Identifier)
+                node_id = ast.IdentifierNode(id_)
+                if self.token.type == Tokentype.ParenthesisL:
+                    node2 = self.c_2_expr()
+                    while self.token.type == Tokentype.Comma:
+                        lists.append(self.c_2_expr())
+                return [node_id, lists]
+            elif self.token.type == Tokentype.BracketL:
+                self.match(Tokentype.BracketL)
+                node = self.expr()
+                self.match(Tokentype.BracketR)
+                return node
+            else:
+                raise (SyntaxErrorException("Invalid expression", self.token.location))
+
             return node
         return None
 
-    # c_1_expr ::= . ID c_2_expr
-    # | [ expr ]
-    # | bin op cexpr
-    def c_1_expr(self):
-        print("c_1_expr()")
-        if self.token.type in self.bin_op_tokens:
-            self.bin_op()
-            node = self.cexpr()
-            return node
-        elif self.token.type == Tokentype.Period:
-            self.match(Tokentype.Period)
-            node = self.match(Tokentype.Identifier)
-            node2 = self.c_2_expr()
-            return ast.MethodCallExprNode(node, node2)
-        elif self.token.type == Tokentype.BracketL:
-            self.match(Tokentype.BracketL)
-            node = self.expr()
-            self.match(Tokentype.BracketR)
-            return node
-        else:
-            raise(SyntaxErrorException("Invalid expression", self.token.location))
 
     # c_2_expr ::= ( {expr {, expr }∗}? ) | eps
     def c_2_expr(self):
@@ -586,13 +601,21 @@ class Parser:
         print("fexpr()")
         node = ast.ExprNode()
         if self.token.type == Tokentype.Identifier:
+            print('identifier')
             id_ = self.token.lexeme
             self.match(Tokentype.Identifier)
-            node_exprs = self.f_1_expr()
-            if node_exprs is None:
-                return ast.IdentifierNode(id_)
+            print(self.token.type == Tokentype.ParenthesisL)
+            print(self.peek().type)
+            if self.token.type == Tokentype.ParenthesisL and self.peek().type == Tokentype.ParenthesisR:
+                self.match(Tokentype.ParenthesisL)
+                self.match(Tokentype.ParenthesisR)
+                return ast.FunctionCallExprNode(ast.IdentifierNode(id_), [])
             else:
-                return ast.FunctionCallExprNode(ast.IdentifierNode(id_), node_exprs)
+                node_exprs = self.f_1_expr()
+                if node_exprs is None:
+                    return ast.IdentifierNode(id_)
+                else:
+                    return ast.FunctionCallExprNode(ast.IdentifierNode(id_), node_exprs)
         elif self.token.type in self.first_literal_tokens:
             node = self.literal()
             return node
