@@ -331,10 +331,11 @@ class Parser:
                 return_expr = self.expr()
                 node = ast.ReturnStmtNode(return_expr)
             else:
-                node = ast.ReturnStmtNode()
+                node = ast.ReturnStmtNode(None)
         else:
             print("simple_stmt()")
             node = self.expr()
+            #node = ast.ExprStmt(node) # ExprStmt CAN'T BE USED BY PRINT VISITOR, so this is commented
         return node
 
     # block ::= NEWLINE INDENT stmt+ DEDENT
@@ -391,23 +392,22 @@ class Parser:
         print("expr()")
         node = self.e_or0_expr()
         node2 = self.e_if0_expr()
-        if node2 is None:
-            return node
-        elif node2 is ast.ListExprNode:
+        if node2 is ast.ListExprNode:
+            print('expr_if_here')
             return ast.IfExprNode(node, node2[0], node2[1])
         else:
-            return
+            return node
 
-    # e_if0_expr ::= e_if_expr e_if0_expr | eps
+    # e_if0_expr ::= e_if_expr | eps
     def e_if0_expr(self):
         print("e_if0_expr()")
         if self.token.type in self.first_e_or0_expr_tokens:
             node_or_list = self.e_if_expr()
-            self.e_if0_expr()
             return node_or_list
-        return None
+        else:
+            return None
 
-    # e_if_expr ::= if e_if_expr else e_if_expr | e_or0_expr
+    # e_if_expr ::= if e_if_expr else e_if_expr | eps
     def e_if_expr(self):
         print("e_if_expr()")
         if self.token.type == Tokentype.KwIf:
@@ -417,7 +417,7 @@ class Parser:
             node2 = self.e_if_expr()
             return ast.ListExprNode([node, node2])
         else:
-            return self.e_or0_expr()
+            return None
 
     # e_or0_expr - e_and0_expr e_or_expr
     def e_or0_expr(self):
@@ -489,6 +489,7 @@ class Parser:
             node = self.fexpr()
             if self.token.type in self.bin_op_tokens:
                 node = ast.BinaryOpExprNode(self.token.type, node, self.c_0_expr())
+            return node
 
     # c_0_expr ::= c_1_expr c_0_expr | eps
     def c_0_expr(self):
