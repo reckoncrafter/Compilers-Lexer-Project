@@ -28,6 +28,7 @@ def yesterday( yesterday : int) :
         told : string = "you"
         if about > 0 and theblublu is True :
             print(sky)
+            n = n + 1
         else :
             pass
 

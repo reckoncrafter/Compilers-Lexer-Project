@@ -1,19 +1,19 @@
 # Parser and Abstract Syntax Tree Report
 
-Alice Tedeschi
+Alice Tedeschi, Dawson Finklea
 
 ## Grammar
 ```
-program ::= {var def | func def | class def }∗ stmt∗
+program ::= {var def | func def | class def }* stmt*
 
 class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
 
 class body ::= pass NEWLINE
 | {var def | func def }+
 
-func def ::= def ID ( {typed var {, typed var }∗}? ) {-> type}? : NEWLINE INDENT func body DEDENT
+func def ::= def ID ( {typed var {, typed var }*}? ) {-> type}? : NEWLINE INDENT func body DEDENT
 
-func body ::= {global decl | nonlocal decl | var def | func def }∗ stmt+
+func body ::= {global decl | nonlocal decl | var def | func def }* stmt+
 
 typed var ::= ID : type
 
@@ -26,7 +26,7 @@ nonlocal decl ::= nonlocal ID NEWLINE
 var def ::= typed var = literal NEWLINE
 
 stmt ::= simple stmt NEWLINE
-| if expr : block {elif expr : block }∗ {else : block }?
+| if expr : block {elif expr : block }* {else : block }?
 | while expr : bloc}
 | for ID in expr : bloc}
 
@@ -67,7 +67,7 @@ c_1_expr ::= . ID c_2_expr
 | [ expr ]
 | bin_op cexpr
 
-c_2_expr ::= ( {expr {, expr }∗}? ) | eps
+c_2_expr ::= ( {expr {, expr }*}? ) | eps
 
 bin_op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
 
@@ -78,9 +78,9 @@ target_1 ::= . ID | [expr]
 
 fexpr ::= ID f_1_expr
 | literal
-| [ {expr {, expr }∗}? ]
+| [ {expr {, expr }*}? ]
 | ( expr )
-f_1_expr ::= ( {expr {, expr }∗}? ) | eps
+f_1_expr ::= ( {expr {, expr }*}? ) | eps
 ```
 
 This is a rewritten form of the original reference grammar, refactored to eliminate ambiguity, and left-recursion. 
