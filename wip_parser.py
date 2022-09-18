@@ -310,14 +310,15 @@ class Parser:
             print('simple_stmt')
             node = self.simple_stmt()
             targets = [node]
-            if node is (ast.MemberExprNode or ast.IndexExprNode or ast.IdentifierNode) and self.peek().type == Tokentype.OpAssign:
+            if node is ast.IdentifierNode and self.peek().type == Tokentype.OpAssign:
                 self.match(Tokentype.OpAssign)
                 node2 = self.expr()
                 while node2 is (ast.MemberExprNode or ast.IndexExprNode or ast.IdentifierNode) and self.peek().type == Tokentype.OpAssign:
                     targets.append(node2)
                     node2 = self.expr()
                 node = ast.AssignStmtNode(targets, node2)
-            self.match(Tokentype.Newline)
+            else:
+                self.match(Tokentype.Newline)
         else:
             return None #this is wrong
 

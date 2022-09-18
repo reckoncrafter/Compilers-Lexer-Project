@@ -40,3 +40,5 @@ elif ehhh > ooo or not jjj :
 else :
     return to_be or not to_be
 
+a = 0
+
