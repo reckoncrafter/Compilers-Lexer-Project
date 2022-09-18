@@ -1,5 +1,7 @@
 # Parser and Abstract Syntax Tree Report
 
+Alice Tedeschi
+
 ## Grammar
 ```
 program ::= {var def | func def | class def }∗ stmt∗
@@ -58,13 +60,13 @@ fexpr ::= ID f_1_expr
 f_1_expr ::= ( {expr {, expr }∗}? ) | eps
 ```
 
-This is a rewritten form of the original reference grammar, refactored to eliminate ambiguity, and left-recursion.
+This is a rewritten form of the original reference grammar, refactored to eliminate ambiguity, and left-recursion. 
 
 ---
 
-Likely the most difficult part of this project was refactoring the grammer in such a way that an Abstact Syntax Tree could still be writtin into the parser without having to pass objects *down* the call stack, only upwards through the the returns.
+Likely the most difficult part of this project was refactoring the grammar in such a way that an Abstact Syntax Tree could still be writtin into the parser without having to pass objects *down* the call stack, only upwards through the the returns.
 
-Another sticking point was the `target` non-terminal.
+Another sticking point was the `target` non-terminal. It is still not completly working, and right now just works with simple one target assignments.
 
-The target begins with an `Tokentype.Identifier` or a `cexpr()`, and determining what constitutes a target instead of another expression is difficult without backtracking.
+
 
