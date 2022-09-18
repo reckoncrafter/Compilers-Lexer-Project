@@ -1,14 +1,23 @@
 def yesterday(yesterday : int) :
-    dammi : int = 1
-    lametta : string = "chemitaglio"
-    if dammi > 0 :
+    sususu : int = 1
+    summertime : string = "sadness"
+    if sususu > 0 :
         print(stica)
     else :
         pass
 
-def yesterday( yesterday : int) :
-        dammi : int = 1
-        lametta : string = "chemitaglio"
+class theyregonna(cleanup):
+
+    i : int = 0
+
+    def x(why : int, whyy : int, whyyy : int):
+        if x:
+            pass
+        elif x or whyy:
+            return x
+        else:
+            print(why)
+
 
 wonder : int = 1
 how : string = "wonder why"
