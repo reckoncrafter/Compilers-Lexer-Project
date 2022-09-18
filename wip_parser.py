@@ -283,7 +283,8 @@ class Parser:
                 elif_expr = self.expr()
                 self.match(Tokentype.Colon)
                 elif_body = self.block()
-                elifs.append(tuple[elif_expr, elif_body])
+                elifs.append([elif_expr, elif_body])
+                print(elifs)
                 node = ast.IfStmtNode(cond_, then_, elifs, None)
             if self.token.type == Tokentype.KwElse:
                 self.match(Tokentype.KwElse)

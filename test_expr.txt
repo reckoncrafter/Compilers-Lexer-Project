@@ -1,8 +1,10 @@
 if dammi > 0 :
     pass
 elif ehi <= 1 :
-    return i
-else:
-    h : int = 0
+    return ops
+elif ehi <= 1 :
+    return op
+else :
+    v
 
 
