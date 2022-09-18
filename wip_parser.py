@@ -104,11 +104,10 @@ class Parser:
             print(decl)
         while self.token.type in self.first_stmt_tokens:
             print('waaat')
-            decl = self.stmt()
-            stmt.append(decl)
+            singlestmt = self.stmt()
+            stmt.append(singlestmt)
 
-
-        return ast.ProgramNode([], stmt)
+        return ast.ProgramNode(decl, stmt)
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
@@ -277,7 +276,7 @@ class Parser:
             cond_ = self.expr()
             self.match(Tokentype.Colon)
             then_ = self.block()
-            node = ast.IfStmtNode(cond_, then_, None, None)
+            node = ast.IfStmtNode(cond_, then_, [], [])
             while self.token.type == Tokentype.KwElif:
                 self.match(Tokentype.KwElif)
                 elif_expr = self.expr()

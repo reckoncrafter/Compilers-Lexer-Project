@@ -1,10 +1,32 @@
-if dammi > 0 :
-    pass
-elif ehi <= 1 :
-    return ops
-elif ehi <= 1 :
-    return op
-else :
-    v
+def yesterday(yesterday : int) :
+    dammi : int = 1
+    lametta : string = "chemitaglio"
+    if dammi > 0 :
+        print(stica)
+    else :
+        pass
 
+def yesterday( yesterday : int) :
+        dammi : int = 1
+        lametta : string = "chemitaglio"
+
+wonder : int = 1
+how : string = "wonder why"
+
+def yesterday( yesterday : int) :
+        I : int = 1
+        told : string = "you"
+        if about > 0 and theblublu is True :
+            print(sky)
+        else :
+            pass
+
+
+if life == hard :
+    if studytime < 0 and sunnyout or not rain :
+        pass
+elif ehhh > ooo or not jjj :
+    pass
+else :
+    return to_be or not to_be
 
