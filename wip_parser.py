@@ -498,7 +498,9 @@ class Parser:
             if self.token.type in self.bin_op_tokens:
                 node = ast.BinaryOpExprNode(self.token.type, node, self.c_0_expr())
             elif self.token.type == Tokentype.Period:
-                node = ast.MethodCallExprNode(node, self.c_0_expr()[0], self.c_0_expr()[1])
+                a, b = self.c_0_expr()
+                mem = ast.MemberExprNode(node, a)
+                node = ast.MethodCallExprNode(node, b)
             elif self.token.type == Tokentype.BracketL:
                 node = ast.IndexExprNode(node, self.c_0_expr())
             return node
