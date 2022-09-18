@@ -47,9 +47,9 @@ class Parser:
 
     # Helper function.
     def match(self, type):
-        print('trying matching: ', self.token.type)
+
         if self.token.type == type:
-            print('matching: ', self.token.type)
+
             if self.token_peek is None:
                 self.token = self.lexer.next()
             else:
@@ -78,9 +78,9 @@ class Parser:
     # Finish implementing the parser. A call to parse, parses a single Boolean expression.
     # The file should return an AST if parsing is successful, otherwise a syntax-error exception is thrown.
     def parse(self):
-        self.program()
+        node = self.program()
         self.match(Tokentype.EOI)
-        return
+        return node
 
     # program ::= {var def | func def | class def }∗ stmt∗
     def program(self):
@@ -88,22 +88,36 @@ class Parser:
         decl = []
         stmt = []
         while self.token.type in {Tokentype.Identifier, Tokentype.KwDef, Tokentype.KwClass}:
+            print('here')
             if self.token.type == Tokentype.Identifier and self.peek().type == Tokentype.Colon:
+                print('here')
                 decl.append(self.var_def())
             elif self.token.type == Tokentype.KwDef:
+                print('here')
                 decl.append(self.func_def())
             elif self.token.type == Tokentype.KwClass:
+                print('here')
                 decl.append(self.class_def())
+            else:
+                print(decl)
+                break
+            print(decl)
         while self.token.type in self.first_stmt_tokens:
-            stmt.append(self.stmt())
-        return ast.ProgramNode(decl, stmt)
+            print('waaat')
+            decl = self.stmt()
+            stmt.append(decl)
+
+
+        return ast.ProgramNode([], stmt)
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
     def class_def(self):
         print("class_def()")
         decl = []
         self.match(Tokentype.KwClass)
+
         id_ = self.token.lexeme
+        print(id_)
         self.match(Tokentype.Identifier)
         node = ast.IdentifierNode(id_)
 
@@ -122,7 +136,7 @@ class Parser:
 
         self.match(Tokentype.Dedent)
 
-        return ast.ClassDefNode(id_, node2, decl)
+        return ast.ClassDefNode(node, node2, decl)
 
     # class body ::= pass NEWLINE
     # | {var def | func def }+
@@ -148,6 +162,7 @@ class Parser:
         print("func_def()")
         self.match(Tokentype.KwDef)
         id = self.token.lexeme
+        node_id = ast.IdentifierNode(id)
         params = []
         return_type = None
         self.match(Tokentype.Identifier)
@@ -171,7 +186,7 @@ class Parser:
         fun_decl, fun_stmt = self.func_body()
 
         self.match(Tokentype.Dedent)
-        return ast.FuncDefNode(id, params, return_type, fun_decl, fun_stmt)
+        return ast.FuncDefNode(node_id, params, return_type, fun_decl, fun_stmt)
 
     # func body ::= {global decl | nonlocal decl | var def | func def }∗ stmt+
     def func_body(self):
@@ -201,22 +216,22 @@ class Parser:
         id_node = ast.IdentifierNode(self.token.lexeme)
         self.match(Tokentype.Identifier)
         self.match(Tokentype.Colon)
-        self._type()
-        return ast.TypedVarNode(id_node)
+        id_type = self._type()
+        return ast.TypedVarNode(id_node, id_type)
 
     # type ::= ID | IDSTRING | [ type ]
     def _type(self):
         print("_type()")
         node = ast.TypeAnnotationNode()
         if self.token.type == Tokentype.Identifier:
-            node = ast.IdentifierNode(self.token.lexeme)
+            node = ast.ClassTypeAnnotationNode(self.token.lexeme)
             self.match(Tokentype.Identifier)
         elif self.token.type == Tokentype.StringLiteral:
-            node = ast.IdentifierNode(self.token.lexeme)
+            node = ast.ClassTypeAnnotationNode(self.token.lexeme)
             self.match(Tokentype.StringLiteral)
         elif self.token.type == Tokentype.BracketL:
             self.match(Tokentype.BracketL)
-            self._type()
+            node = ast.ListTypeAnnotationNode[self._type()]
             self.match(Tokentype.BracketR)
         return node
 
@@ -256,22 +271,25 @@ class Parser:
         node = ast.ExprNode()
         if self.token.type == Tokentype.KwIf:
             print('token if')
-            then_ = []
-            else_ = []
+            elifs = []
+
             self.match(Tokentype.KwIf)
             cond_ = self.expr()
             self.match(Tokentype.Colon)
-            self.block()
+            then_ = self.block()
+            node = ast.IfStmtNode(cond_, then_, None, None)
             while self.token.type == Tokentype.KwElif:
                 self.match(Tokentype.KwElif)
-                then_.append(self.expr())
+                elif_expr = self.expr()
                 self.match(Tokentype.Colon)
-                self.block()
+                elif_body = self.block()
+                elifs.append(tuple[elif_expr, elif_body])
+                node = ast.IfStmtNode(cond_, then_, elifs, None)
             if self.token.type == Tokentype.KwElse:
                 self.match(Tokentype.KwElse)
                 self.match(Tokentype.Colon)
-                else_.append(self.block())
-            node = ast.IfStmtNode(cond_, then_, else_)
+                else_body = self.block()
+                node = ast.IfStmtNode(cond_, then_, elifs, else_body)
         elif self.token.type == Tokentype.KwWhile:
             self.match(Tokentype.KwWhile)
             expr = self.expr()
@@ -292,6 +310,8 @@ class Parser:
             print('simple_stmt')
             node = self.simple_stmt()
             self.match(Tokentype.Newline)
+        else:
+            return None #this is wrong
 
         return node
 
@@ -304,6 +324,7 @@ class Parser:
         node = ast.StmtNode()
         if self.token.type == Tokentype.KwPass:
             self.match(Tokentype.KwPass)
+            node = ast.PassStmtNode()
         elif self.token.type == Tokentype.KwReturn:
             self.match(Tokentype.KwReturn)
             if self.token.type in self.first_expr_tokens:
@@ -375,7 +396,7 @@ class Parser:
         elif node2 is ast.ListExprNode:
             return ast.IfExprNode(node, node2[0], node2[1])
         else:
-            return node2
+            return
 
     # e_if0_expr ::= e_if_expr e_if0_expr | eps
     def e_if0_expr(self):
@@ -447,7 +468,7 @@ class Parser:
 
     # e_not_expr - not e_not_expr | cexpr
     def e_not_expr(self):
-        print("e_0_expr()")
+        print("e_not_expr()")
         if self.token.type == Tokentype.OpNot:
             self.match(Tokentype.OpNot)
             node = self.e_not_expr()

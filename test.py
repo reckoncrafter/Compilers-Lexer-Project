@@ -1,5 +1,4 @@
 cc : int = 12076463
-c : str = "ciao"
 
 class MyClass:
     def method(self: "MyClass"):
@@ -30,3 +29,43 @@ with open(filename) as f:
         token = lex.next()
 
 n = 0
+
+
+
+
+
+
+
+
+
+    def yesterday(yesterday : int) :
+        dammi : int = 1
+        lametta : string = "chemitaglio"
+        if dammi > 0 :
+            print(stica)
+        else :
+            pass
+
+def yesterday( yesterday : int) :
+        dammi : int = 1
+        lametta : string = "chemitaglio"
+
+wonder : int = 1
+how : string = "wonder why"
+
+def yesterday( yesterday : int) :
+        dammi : int = 1
+        lametta : string = "chemitaglio"
+        if dammi > 0 and blu is True :
+            print(stica)
+        else :
+            pass
+
+
+if life == hard :
+    if studytime < 0 and outside == sunny or not rain :
+        pass
+elif blue > happy or not great :
+    pass
+else :
+    return tobe or not tobe
