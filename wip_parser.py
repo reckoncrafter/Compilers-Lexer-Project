@@ -309,16 +309,17 @@ class Parser:
         elif self.token.type in self.first_simplestmt_tokens:
             print('simple_stmt')
             node = self.simple_stmt()
+            print(node)
             targets = [node]
-            if node is ast.IdentifierNode and self.peek().type == Tokentype.OpAssign:
+            print(self.token.type)
+            if self.token.type == Tokentype.OpAssign:
                 self.match(Tokentype.OpAssign)
                 node2 = self.expr()
-                while node2 is (ast.MemberExprNode or ast.IndexExprNode or ast.IdentifierNode) and self.peek().type == Tokentype.OpAssign:
-                    targets.append(node2)
-                    node2 = self.expr()
                 node = ast.AssignStmtNode(targets, node2)
+                self.match(Tokentype.Newline)
             else:
                 self.match(Tokentype.Newline)
+
         else:
             return None #this is wrong
 
