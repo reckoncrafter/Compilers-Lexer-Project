@@ -315,6 +315,11 @@ class Parser:
             if self.token.type == Tokentype.OpAssign:
                 self.match(Tokentype.OpAssign)
                 node2 = self.expr()
+                # QUESTION:
+                # Using only one look ahead, how is the parser supposed to correctly identify the following cases:
+                # x = y[0].n + 5   //  AssignStmtNode(), targets: x, node: ( y[0].n + 5 )
+                # and
+                # x = y[0].n = 5  //   AssignStmtNode(), targets: x, y[0].n, node: (5)
                 node = ast.AssignStmtNode(targets, node2)
                 self.match(Tokentype.Newline)
             else:
