@@ -40,7 +40,7 @@ class Parser:
                                         Tokentype.Identifier, Tokentype.BracketL, Tokentype.ParenthesisL,
                                         Tokentype.KwNone, Tokentype.BoolFalseLiteral, Tokentype.BoolTrueLiteral,
                                         Tokentype.IntegerLiteral, Tokentype.StringLiteral}
-        self.first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile, Tokentype.KwForg, Tokentype.KwReturn, Tokentype.KwPass,
+        self.first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile, Tokentype.KwFor, Tokentype.KwReturn, Tokentype.KwPass,
                                   Tokentype.OpNot, Tokentype.OpMinus, Tokentype.Identifier, Tokentype.BracketL,
                                   Tokentype.ParenthesisL, Tokentype.KwNone, Tokentype.BoolFalseLiteral,
                                   Tokentype.BoolTrueLiteral, Tokentype.IntegerLiteral, Tokentype.StringLiteral}
