@@ -40,7 +40,7 @@ class Parser:
                                         Tokentype.Identifier, Tokentype.BracketL, Tokentype.ParenthesisL,
                                         Tokentype.KwNone, Tokentype.BoolFalseLiteral, Tokentype.BoolTrueLiteral,
                                         Tokentype.IntegerLiteral, Tokentype.StringLiteral}
-        self.first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile, Tokentype.KwReturn, Tokentype.KwPass,
+        self.first_stmt_tokens = {Tokentype.KwIf, Tokentype.KwWhile, Tokentype.KwForg, Tokentype.KwReturn, Tokentype.KwPass,
                                   Tokentype.OpNot, Tokentype.OpMinus, Tokentype.Identifier, Tokentype.BracketL,
                                   Tokentype.ParenthesisL, Tokentype.KwNone, Tokentype.BoolFalseLiteral,
                                   Tokentype.BoolTrueLiteral, Tokentype.IntegerLiteral, Tokentype.StringLiteral}
@@ -552,7 +552,8 @@ class Parser:
                 else:
                     return node
             else:
-                raise (SyntaxErrorException("Invalid expression", self.token.location))
+                return None
+                #raise (SyntaxErrorException("Invalid expression", self.token.location))
 
             return node
         return None
@@ -614,13 +615,19 @@ class Parser:
                     node_exprs.append(self.expr())
             self.match(Tokentype.BracketR)
             return ast.ListExprNode(node_exprs)
+        elif self.token.type == Tokentype.ParenthesisL and self.peek().type == Tokentype.ParenthesisR:
+            self.match(Tokentype.ParenthesisL)
+            self.match(Tokentype.ParenthesisR)
+            return None
         elif self.token.type == Tokentype.ParenthesisL:
             self.match(Tokentype.ParenthesisL)
             node = self.expr()
             self.match(Tokentype.ParenthesisR)
             return node
         else:
-            raise(SyntaxErrorException("Invalid Expression", self.token.location))
+            return None
+            #print(self.token.type)
+            #raise(SyntaxErrorException("Invalid Expression", self.token.location))
 
 
 
