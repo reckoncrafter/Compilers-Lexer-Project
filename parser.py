@@ -13,7 +13,17 @@ class Parser:
                               Tokentype.OpModulus,
                               Tokentype.OpEq, Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq, Tokentype.OpLt,
                               Tokentype.OpGt, Tokentype.OpIs}
-
+        # self.bin_op_map = {
+        #     Tokentype.OpPlus : ast.Operator.Plus,
+        #     Tokentype.OpMinus : ast.Operator.Minus,
+        #     Tokentype.OpMultiply : ast.Operator.Multiply,
+        #     Tokentype.OpIntDivide : ast.Operator.IntDivide,
+        #     Tokentype.OpModulus : ast.Operator.Modulus,
+        #     Tokentype.OpEq : ast.Operator.Eq,
+        #     Tokentype.OpNotEq : ast.Operator.NotEq,
+        #     Tokentype.OpLtEq : 
+        # }
+    
         self.c_1_expr_tokens = {Tokentype.Period, Tokentype.BracketL, Tokentype.OpPlus, Tokentype.OpMinus,
                                 Tokentype.OpMultiply, Tokentype.OpIntDivide,
                                 Tokentype.OpModulus,
