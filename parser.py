@@ -517,8 +517,9 @@ class Parser:
             # print('token in c_0')
             lists = []
             if self.token.type in self.bin_op_tokens:
+                bin = self.token.type
                 self.bin_op()
-                node = ast.BinaryOpExprNode(ast.Operator.Or, node_, self.cexpr())
+                node = ast.BinaryOpExprNode(bin, node_, self.cexpr())
                 node2 = self.c_0_expr(node)
                 if node2 is not None:
                     return node2

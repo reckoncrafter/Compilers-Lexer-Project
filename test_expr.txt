@@ -42,6 +42,9 @@ class DoublingVector(Vector):
 vec : Vector = None
 num : int = 0
 
+def fun(x : int) -> str:
+   x = 0
+
 
 for num in [4, 8, 15, 16, 23, 42]:
     vec.append(num)
@@ -49,7 +52,10 @@ for num in [4, 8, 15, 16, 23, 42]:
 
 
 
+
 a  = a[2][3].mem = fun(a, b, c)
+
+
 
 vec = 0
 
