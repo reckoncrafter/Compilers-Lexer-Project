@@ -13,22 +13,10 @@ class Parser:
                               Tokentype.OpModulus,
                               Tokentype.OpEq, Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq, Tokentype.OpLt,
                               Tokentype.OpGt, Tokentype.OpIs}
-<<<<<<< Updated upstream
-        # self.bin_op_map = {
-        #     Tokentype.OpPlus : ast.Operator.Plus,
-        #     Tokentype.OpMinus : ast.Operator.Minus,
-        #     Tokentype.OpMultiply : ast.Operator.Multiply,
-        #     Tokentype.OpIntDivide : ast.Operator.IntDivide,
-        #     Tokentype.OpModulus : ast.Operator.Modulus,
-        #     Tokentype.OpEq : ast.Operator.Eq,
-        #     Tokentype.OpNotEq : ast.Operator.NotEq,
-        #     Tokentype.OpLtEq : 
-        # }
-    
-=======
+
         self.bin_op_list = [Tokentype.OpOr, Tokentype.OpAnd, Tokentype.OpNot,Tokentype.OpEq,Tokentype.OpNotEq,Tokentype.OpLt,Tokentype.OpGt,Tokentype.OpLtEq,Tokentype.OpGtEq,Tokentype.OpIs,Tokentype.OpPlus,Tokentype.OpMinus,Tokentype.OpMultiply,Tokentype.OpIntDivide,Tokentype.OpModulus]
 
->>>>>>> Stashed changes
+
         self.c_1_expr_tokens = {Tokentype.Period, Tokentype.BracketL, Tokentype.OpPlus, Tokentype.OpMinus,
                                 Tokentype.OpMultiply, Tokentype.OpIntDivide,
                                 Tokentype.OpModulus,
@@ -126,7 +114,6 @@ class Parser:
         self.match(Tokentype.KwClass)
 
         id_ = self.token.lexeme
-        # print(id_)
         self.match(Tokentype.Identifier)
         node = ast.IdentifierNode(id_)
 
@@ -321,7 +308,7 @@ class Parser:
             body_list_node = self.block()
             node = ast.ForStmtNode(id_node, iter_node, body_list_node)
         elif self.token.type in self.first_simplestmt_tokens:
-            # print('simple_stmt')
+
             node = self.simple_stmt()
             targets = []
             if self.token.type == Tokentype.OpAssign and (type(node) == ast.IdentifierNode or type(node) == ast.IndexExprNode or type(node) == ast.MemberExprNode):
@@ -361,7 +348,6 @@ class Parser:
             else:
                 node = ast.ReturnStmtNode(None)
         else:
-            # print("simple_stmt()")
             node = self.expr()
             #node = ast.ExprStmt(node) # ExprStmt CAN'T BE USED BY # PRINT VISITOR, so this is commented
         return node
@@ -400,7 +386,6 @@ class Parser:
             node = ast.BooleanLiteralExprNode(False)
         elif self.token.type == Tokentype.IntegerLiteral:
             id_ = self.token.lexeme
-            # print(id_)
             self.match(Tokentype.IntegerLiteral)
             node = ast.IntegerLiteralExprNode(id_)
         elif self.token.type == Tokentype.StringLiteral:
@@ -422,7 +407,6 @@ class Parser:
         node = self.e_or0_expr()
         node2 = self.e_if0_expr()
         if node2 is ast.ListExprNode:
-            # print('expr_if_here')
             return ast.IfExprNode(node, node2[0], node2[1])
         else:
             return node
@@ -526,7 +510,6 @@ class Parser:
     def c_0_expr(self, node_):
         # print("c_0_expr()")
         if self.token.type in self.c_1_expr_tokens:
-            # print('token in c_0')
             lists = []
             if self.token.type in self.bin_op_tokens:
                 bin = self.bin_op_list.index(self.token.type)
@@ -543,10 +526,8 @@ class Parser:
                 self.match(Tokentype.Identifier)
                 node_id = ast.IdentifierNode(id_)
                 node = ast.MemberExprNode(node_, node_id)
-                # print(self.token.type)
                 if self.token.type == Tokentype.ParenthesisL:
                     lists = self.parenthesis()
-                    # print(lists)
                     node = ast.MethodCallExprNode(node, lists)
                 node2 = self.c_0_expr(node)
                 if node2 is not None:
@@ -554,7 +535,7 @@ class Parser:
                 else:
                     return node
             elif self.token.type == Tokentype.BracketL:
-                # print('hereee')
+
                 self.match(Tokentype.BracketL)
                 node = self.expr()
                 self.match(Tokentype.BracketR)
@@ -600,7 +581,6 @@ class Parser:
         # print("fexpr()")
         node = ast.ExprNode()
         if self.token.type == Tokentype.Identifier:
-            # print('identifier')
             id_ = self.token.lexeme
             self.match(Tokentype.Identifier)
             if self.token.type == Tokentype.ParenthesisL and self.peek().type == Tokentype.ParenthesisR:
@@ -617,7 +597,7 @@ class Parser:
             node = self.literal()
             return node
         elif self.token.type == Tokentype.BracketL:
-            # print('HERE NOW')
+
             self.match(Tokentype.BracketL)
             node_exprs = []
             if self.token.type in self.first_expr_tokens:

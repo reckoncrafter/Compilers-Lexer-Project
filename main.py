@@ -6,8 +6,6 @@ filename = 'test_expr.txt'
 
 import lexer
 
-n = ast.Operator(0)
-print(n)
 
 with open(filename) as f:
 

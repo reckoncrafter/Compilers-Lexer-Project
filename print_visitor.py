@@ -253,9 +253,7 @@ class PrintVisitor(visitor.Visitor):
     def _(self, node: ast.ClassDefNode):
         self.print('(ClassDef')
         self.indent += 3
-        print('here')
         self.do_visit(node.name)
-        print('here')
         self.do_visit(node.super_class)
         for d in node.declarations:
             self.do_visit(d)
