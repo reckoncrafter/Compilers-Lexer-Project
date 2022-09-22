@@ -55,6 +55,16 @@ for num in [4, 8, 15, 16, 23, 42]:
 
 a  = a[2][3].mem = fun(a, b, c)
 
+for i in range(10):
+    pass
+
+if x == 0 :
+    return not h and y or a
+elif x == 1 :
+    return x
+else :
+    return 9
+
 
 
 vec = 0

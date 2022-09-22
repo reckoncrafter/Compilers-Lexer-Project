@@ -13,6 +13,7 @@ class Parser:
                               Tokentype.OpModulus,
                               Tokentype.OpEq, Tokentype.OpNotEq, Tokentype.OpLtEq, Tokentype.OpGtEq, Tokentype.OpLt,
                               Tokentype.OpGt, Tokentype.OpIs}
+<<<<<<< Updated upstream
         # self.bin_op_map = {
         #     Tokentype.OpPlus : ast.Operator.Plus,
         #     Tokentype.OpMinus : ast.Operator.Minus,
@@ -24,6 +25,10 @@ class Parser:
         #     Tokentype.OpLtEq : 
         # }
     
+=======
+        self.bin_op_list = [Tokentype.OpOr, Tokentype.OpAnd, Tokentype.OpNot,Tokentype.OpEq,Tokentype.OpNotEq,Tokentype.OpLt,Tokentype.OpGt,Tokentype.OpLtEq,Tokentype.OpGtEq,Tokentype.OpIs,Tokentype.OpPlus,Tokentype.OpMinus,Tokentype.OpMultiply,Tokentype.OpIntDivide,Tokentype.OpModulus]
+
+>>>>>>> Stashed changes
         self.c_1_expr_tokens = {Tokentype.Period, Tokentype.BracketL, Tokentype.OpPlus, Tokentype.OpMinus,
                                 Tokentype.OpMultiply, Tokentype.OpIntDivide,
                                 Tokentype.OpModulus,
@@ -73,7 +78,6 @@ class Parser:
 
     # Helper function
     def match_if(self, type):
-        # print('matching: ', self.token.type)
         if self.token.type == type:
             self.match(type)
             return True
@@ -98,25 +102,21 @@ class Parser:
         decl = []
         stmt = []
         while self.token.type in {Tokentype.Identifier, Tokentype.KwDef, Tokentype.KwClass}:
-            # print('here')
             if self.token.type == Tokentype.Identifier and self.peek().type == Tokentype.Colon:
-                # print('here')
                 decl.append(self.var_def())
             elif self.token.type == Tokentype.KwDef:
-                # print('here')
                 decl.append(self.func_def())
             elif self.token.type == Tokentype.KwClass:
-                # print('here')
                 decl.append(self.class_def())
             else:
-                # print(decl)
                 break
-            # print(decl)
-        while self.token.type in self.first_stmt_tokens:
 
+        while self.token.type in self.first_stmt_tokens:
             singlestmt = self.stmt()
             stmt.append(singlestmt)
 
+        if self.token.type in {Tokentype.Identifier, Tokentype.KwDef, Tokentype.KwClass}:
+            raise (SyntaxErrorException("Definitions are only allowed before the statements", self.token.location))
         return ast.ProgramNode(decl, stmt)
 
     # class def ::= class ID ( ID ) : NEWLINE INDENT class body DEDENT
@@ -200,7 +200,6 @@ class Parser:
     # func body ::= {global decl | nonlocal decl | var def | func def }∗ stmt+
     def func_body(self):
         # print("func_body()")
-
         fun_decl = []
         fun_stmt = []
         while self.token.type in {Tokentype.KwGlobal, Tokentype.KwNonLocal, Tokentype.KwDef} or self.peek().type == Tokentype.Colon:
@@ -271,6 +270,10 @@ class Parser:
         self.match(Tokentype.Newline)
         return ast.VarDefNode(node, node2)
 
+    def check_node(self, node):
+        if node is None:
+            raise (SyntaxErrorException("Invalid Expression", self.token.location))
+
     # stmt ::= simple stmt NEWLINE
     # | if expr : block {elif expr : block }∗ {else : block }?
     # | while expr : bloc}
@@ -279,22 +282,21 @@ class Parser:
         # print("stmt()")
         node = ast.ExprNode()
         if self.token.type == Tokentype.KwIf:
-            # print('token if')
             elifs = []
-
             self.match(Tokentype.KwIf)
             cond_ = self.expr()
+            self.check_node(cond_)
             self.match(Tokentype.Colon)
             then_ = self.block()
             node = ast.IfStmtNode(cond_, then_, [], [])
             while self.token.type == Tokentype.KwElif:
                 self.match(Tokentype.KwElif)
                 elif_expr = self.expr()
+                self.check_node(elif_expr)
                 self.match(Tokentype.Colon)
                 elif_body = self.block()
                 elifs.append([elif_expr, elif_body])
-                # print(elifs)
-                node = ast.IfStmtNode(cond_, then_, elifs, None)
+                node = ast.IfStmtNode(cond_, then_, elifs, [])
             if self.token.type == Tokentype.KwElse:
                 self.match(Tokentype.KwElse)
                 self.match(Tokentype.Colon)
@@ -303,6 +305,7 @@ class Parser:
         elif self.token.type == Tokentype.KwWhile:
             self.match(Tokentype.KwWhile)
             expr = self.expr()
+            self.check_node(expr)
             self.match(Tokentype.Colon)
             decl = self.block()
             node = ast.WhileStmtNode(expr, decl)
@@ -313,6 +316,7 @@ class Parser:
             id_node = ast.IdentifierNode(id_)
             self.match(Tokentype.OpIn)
             iter_node = self.expr()
+            self.check_node(iter_node)
             self.match(Tokentype.Colon)
             body_list_node = self.block()
             node = ast.ForStmtNode(id_node, iter_node, body_list_node)
@@ -320,29 +324,29 @@ class Parser:
             # print('simple_stmt')
             node = self.simple_stmt()
             targets = []
-            # print(node)
-            # print(self.token.type)
-            # print(type(node))
             if self.token.type == Tokentype.OpAssign and (type(node) == ast.IdentifierNode or type(node) == ast.IndexExprNode or type(node) == ast.MemberExprNode):
                 while self.token.type == Tokentype.OpAssign and (type(node) == ast.IdentifierNode or type(node) == ast.IndexExprNode or type(node) == ast.MemberExprNode):
                     self.match(Tokentype.OpAssign)
                     targets.append(node)
                     node = self.expr()
-
+                    self.check_node(node)
                 node = ast.AssignStmtNode(targets, node)
                 self.match(Tokentype.Newline)
+            elif self.token.type == Tokentype.Colon:
+                raise (SyntaxErrorException("Definitions are only allowed before the statements", self.token.location))
+                return None
             else:
                 self.match(Tokentype.Newline)
 
         else:
-            return None #this is wrong
+            return None #this should have been temporary
 
         return node
 
     # simple stmt ::= pass
     # | return {expr }?
     # | expr
-    # | { target = }+ expr <--- do this with backtrack
+    # | { target = }+ expr <--- we match target as expr and then if there's an assign, we check if it's the right node (id, member or index)
     def simple_stmt(self):
         # print("simple_stmt()")
         node = ast.StmtNode()
@@ -437,9 +441,9 @@ class Parser:
         # print("e_if_expr()")
         if self.token.type == Tokentype.KwIf:
             self.match(Tokentype.KwIf)
-            node = self.e_if_expr()
+            node = self.e_or0_expr()
             self.match(Tokentype.KwElse)
-            node2 = self.e_if_expr()
+            node2 = self.e_or0_expr()
             return ast.ListExprNode([node, node2])
         else:
             return None
@@ -519,17 +523,15 @@ class Parser:
             return node
 
     # c_0_expr ::= . ID parenthesis c_0_expr | [ expr ] c_0_expr | bin op cexpr c_0_expr | eps
-
-
     def c_0_expr(self, node_):
         # print("c_0_expr()")
         if self.token.type in self.c_1_expr_tokens:
             # print('token in c_0')
             lists = []
             if self.token.type in self.bin_op_tokens:
-                bin = self.token.type
+                bin = self.bin_op_list.index(self.token.type)
                 self.bin_op()
-                node = ast.BinaryOpExprNode(bin, node_, self.cexpr())
+                node = ast.BinaryOpExprNode(ast.Operator(bin), node_, self.cexpr())
                 node2 = self.c_0_expr(node)
                 if node2 is not None:
                     return node2
@@ -565,7 +567,6 @@ class Parser:
             else:
                 return None
                 #raise (SyntaxErrorException("Invalid expression", self.token.location))
-
             return node
         return None
 
@@ -637,7 +638,7 @@ class Parser:
             return node
         else:
             return None
-            #print(self.token.type)
+
             #raise(SyntaxErrorException("Invalid Expression", self.token.location))
 
 
