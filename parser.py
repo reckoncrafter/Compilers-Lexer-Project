@@ -226,7 +226,7 @@ class Parser:
             self.match(Tokentype.StringLiteral)
         elif self.token.type == Tokentype.BracketL:
             self.match(Tokentype.BracketL)
-            node = ast.ListTypeAnnotationNode[self._type()]
+            node = ast.ListTypeAnnotationNode(self._type())
             self.match(Tokentype.BracketR)
         return node
 

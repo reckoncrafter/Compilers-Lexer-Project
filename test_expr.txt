@@ -40,7 +40,7 @@ class DoublingVector(Vector):
         return self.capacity()
 
 vec : Vector = None
-num : int = 0
+num : [ int ] = 0
 
 def fun(x : int) -> str:
    x = 0
