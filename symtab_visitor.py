@@ -190,11 +190,12 @@ class SymbolTableVisitor(visitor.Visitor):
         # a function has a new symbol table, we add a child to te current one
         parent = self.curr_sym_table
         name = self.do_visit(node.name)
-        self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str="function"))
         bool_nested = True
         if parent.get_name() == 'top':
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str="function"))
             bool_nested = False
         else:
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str="function"))
             bool_nested = True
         child = symbol_table.Function(name, is_nested=bool_nested)
         parent.add_child(child)
@@ -202,7 +203,7 @@ class SymbolTableVisitor(visitor.Visitor):
         self.do_visit(node.name)
         for p in node.params:
             name, ty = self.do_visit(p)
-            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str=ty))
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Parameter, type_str=ty))
         self.do_visit(node.return_type)
         for d in node.declarations:
             self.do_visit(d)
