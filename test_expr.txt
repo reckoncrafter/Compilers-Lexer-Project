@@ -1,45 +1,72 @@
-def yesterday(yesterday : int) :
-    sususu : int = 1
-    summertime : string = "sadness"
-    yesterday.methodcall(a)
-    if sususu > 0 :
-        print(stica)
-    else :
-        pass
+# A resizable list of integers
+class Vector(object):
+    # Attributes
+    items : int = None
+    size : int = 0
 
-class theyregonna(cleanup):
+    # Constructor
+    def __init__(self:"Vector"):
+        self.items = [7]
 
-    i : int = 0
+    # Returns current capacity
+    def capacity(self : "Vector"):
+        return len(self.items)
 
-    def x(why : int, whyy : int, whyyy : int):
-        if x:
-            pass
-        elif x or whyy:
-            return x
+    # Increases capacity of vector by one element
+    def increase_capacity(self:"Vector"):
+        self.items = self.items + [1]
+        return self.capacity()
+
+    # Appends one item to end of vector
+    def append(self:"Vector", item: int):
+        if self.size == self.capacity():
+            self.increase_capacity()
+
+        self.items[self.size] = item
+        self.size = self.size + 1
+
+# A faster (but more memory-consuming) implementation of vector
+class DoublingVector(Vector):
+    doubling_limit:int = 16
+
+    # Overriding to do fewer resizes
+    def increase_capacity(self:"DoublingVector"):
+        if (self.capacity() <= self.doubling_limit):
+            self.items = self.items + self.items
         else:
-            print(why)
+            # If doubling limit has been reached, fall back to
+            # standard capacity increases
+            self.items = self.items + [5]
+        return self.capacity()
+
+vec : Vector = None
+num : [ int ] = 0
+
+def fun(x : int) -> str:
+   x = 0
 
 
-wonder : int = 1
-how : string = "wonder why"
-
-def yesterday( yesterday : int) :
-        I : int = 1
-        told : string = "you"
-        if about > 0 and theblublu is True :
-            print(sky)
-            n = n + 1
-        else :
-            pass
+for num in [4, 8, 15, 16, 23, 42]:
+    vec.append(num)
+    print(vec.capacity())
 
 
-if life == hard :
-    if studytime < 0 and sunnyout or not rain :
-        pass
-elif ehhh > ooo or not jjj :
+
+
+a  = a[2][3].mem = fun(a, b, c) + 5 * mem.f(o) + 5
+
+for i in range(10):
     pass
-else :
-    return to_be or not to_be
 
-a = 0
+if x == 0 :
+    return not h and y or a
+elif x == 1 :
+    return x
+else :
+    return 9
+
+
+
+vec = 0
+
 

@@ -44,52 +44,63 @@ literal ::= None
 
 # expr ::= e_or0_expr e_if0_expr
 
-# e_if0_expr ::= e_if_expr | eps
+# e_if0_expr ::= e_if_expr
+# | eps
 
-# e_if_expr ::= if e_if_expr else e_if_expr | eps
+# e_if_expr ::= if e_if_expr else e_if_expr
+# | eps
 
 # e_or0_expr - e_and0_expr e_or_expr
 
-# e_or_expr - or e_and0_expr e_or_expr | eps
+# e_or_expr - or e_and0_expr e_or_expr
+# | eps
 
 # e_and0_expr - e_not_expr e_and_expr
 
-# e_and_expr - and e_not_expr e_and_expr | eps
+# e_and_expr - and e_not_expr e_and_expr
+# | eps
 
-# e_not_expr - not e_not_expr | cexpr
+# e_not_expr - not e_not_expr
+# | cexpr
 
 # cexpr ::= fexpr c_0_expr
 # | - cexpr
 
-c_0_expr ::= c_0_expr c_1_expr | eps
+# c_0_expr ::= . ID parenthesis c_0_expr 
+# | [ expr ] c_0_expr 
+# | bin op cexpr c_0_expr
+# | eps
 
-c_1_expr ::= . ID c_2_expr
-| [ expr ]
-| bin_op cexpr
-
-c_2_expr ::= ( {expr {, expr }*}? ) | eps
+parenthesis ::= ( {expr {, expr }*}? )
+# | eps
 
 bin_op ::= + | - | * | // | % | == | != | <= | >= | < | > | is
+
+fexpr ::= ID parenthesis 
+| literal
+| [ {expr {, expr }*}? ]
+| ( expr )
+
+
+
+The following productions were not used in our program:
 
 target ::= ID
 | cexpr target_1
 
 target_1 ::= . ID | [expr]
 
-fexpr ::= ID f_1_expr
-| literal
-| [ {expr {, expr }*}? ]
-| ( expr )
-f_1_expr ::= ( {expr {, expr }*}? ) | eps
 ```
 
-This is a rewritten form of the original reference grammar, refactored to eliminate ambiguity, and left-recursion. 
+This is a rewritten form of the original reference grammar, refactored to eliminate ambiguity, and left-recursion.  
 
 ---
 
-Likely the most difficult part of this project was refactoring the grammar in such a way that an Abstact Syntax Tree could still be writtin into the parser without having to pass objects *down* the call stack, only upwards through the the returns.
+Likely the most difficult part of this project was refactoring the grammar in such a way that an Abstact Syntax Tree could still be written into the parser and adding a hierarchy for some operators.
 
-Another sticking point was the `target` non-terminal. It is still not completly working, and right now just works with simple one target assignments.
+Another sticking point was the `target` non-terminal. For every assignment our code just matches it with an expression and then if an Assign token occurs checks the type of the expression node: if it is a Identifier Node, a Member Node or an Index Node it generates a Target Node.
+
+Last but not least, as it often happens with lots of coding, the debugging took much longer than we could have anticipated.
 
 
 

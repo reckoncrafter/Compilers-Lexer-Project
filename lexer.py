@@ -223,6 +223,7 @@ class Lexer:
             self.__read_next_char()
             if self.ch == '>':
                 token = Token(Tokentype.Arrow, '->', loc)
+                self.__read_next_char()
             else:
                 token = Token(Tokentype.OpMinus, self.ch, loc)
         elif self.ch == '*':
