@@ -165,10 +165,10 @@ class SymbolTableVisitor(visitor.Visitor):
     @visit.register
     def _(self, node: ast.GlobalDeclNode):
         print(node.variable)
-        name = self.do_visit(node.variable)
-        print(name)
+        #name = self.do_visit(node.variable)
+        #print(name)
         #value = self.do_visit(node.value)
-        self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str=type_))
+        self.curr_sym_table.add_symbol(Symbol(node.variable, Symbol.Is.Global))
 
     @visit.register
     def _(self, node: ast.NonLocalDeclNode):
