@@ -6,7 +6,7 @@ def foo_void():
 def foo(y:int, z:str) -> bool:
     def foo_inner() -> str:
         global x
-        #nonlocal z
+        nonlocal z
         print(x, z)
         return "inner"
 
