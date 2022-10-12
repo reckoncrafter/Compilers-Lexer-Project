@@ -98,7 +98,7 @@ This is a rewritten form of the original reference grammar, refactored to elimin
 
 Likely the most difficult part of this project was refactoring the grammar in such a way that an Abstact Syntax Tree could still be written into the parser and adding a hierarchy for some operators.
 
-Another sticking point was the `target` non-terminal. For every assignment out code just matches it with an expression and then if an Assign token occurs checks the type of the expression node: if it is a Identifier Node, a Member Node or an Index Node it generates a Target Node.
+Another sticking point was the `target` non-terminal. For every assignment our code just matches it with an expression and then if an Assign token occurs checks the type of the expression node: if it is a Identifier Node, a Member Node or an Index Node it generates a Target Node.
 
 Last but not least, as it often happens with lots of coding, the debugging took much longer than we could have anticipated.
 

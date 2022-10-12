@@ -53,7 +53,7 @@ for num in [4, 8, 15, 16, 23, 42]:
 
 
 
-a  = a[2][3].mem = fun(a, b, c)
+a  = a[2][3].mem = fun(a, b, c) + 5 * mem.f(o) + 5
 
 for i in range(10):
     pass
