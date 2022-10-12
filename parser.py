@@ -235,6 +235,7 @@ class Parser:
         # print("global_decl()")
         self.match(Tokentype.KwGlobal)
         ID = self.token.lexeme
+        ID = ast.IdentifierNode(ID)
         self.match(Tokentype.Identifier)
         self.match(Tokentype.Newline)
         return ast.GlobalDeclNode(ID)
@@ -244,6 +245,7 @@ class Parser:
         # print("nonlocal_def()")
         self.match(Tokentype.KwNonLocal)
         ID = self.token.lexeme
+        ID = ast.IdentifierNode(ID)
         self.match(Tokentype.Identifier)
         self.match(Tokentype.Newline)
         return ast.NonLocalDeclNode(ID)

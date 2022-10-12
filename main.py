@@ -2,7 +2,7 @@ import parser
 import print_visitor
 import ast
 
-filename = 'test_expr.txt'
+filename = 'test/test03.cpy'
 
 import lexer
 
