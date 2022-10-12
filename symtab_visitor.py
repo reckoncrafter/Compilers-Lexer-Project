@@ -158,7 +158,8 @@ class SymbolTableVisitor(visitor.Visitor):
 
     @visit.register
     def _(self, node: ast.ListTypeAnnotationNode):
-        return self.do_visit(node.elem_type)
+        str_ = f"[{self.do_visit(node.elem_type)}]"
+        return str_
 
     @visit.register
     def _(self, node: ast.TypedVarNode):
