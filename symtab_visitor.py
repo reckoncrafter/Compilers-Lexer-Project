@@ -84,7 +84,21 @@ class SymbolTableVisitor(visitor.Visitor):
 
     @visit.register
     def _(self, node: ast.FunctionCallExprNode):
-        self.do_visit(node.identifier)
+        name = self.do_visit(node.identifier)
+        sym_tab = self.curr_sym_table
+        type_ = ''
+        if name in self.built_ins:
+            type_ = self.built_ins[name]
+        
+        if type_ == '':
+            while sym_tab != None:
+                for sym in sym_tab.get_symbols():
+                    if name == sym.get_name():
+                        type_ = sym.get_type_str()  
+                sym_tab = sym_tab.get_parent()
+        
+        
+        self.curr_sym_table.add_symbol(Symbol(name, 0, type_))
         for a in node.args:
             self.do_visit(a)
 
