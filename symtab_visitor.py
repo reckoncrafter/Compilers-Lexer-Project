@@ -183,6 +183,7 @@ class SymbolTableVisitor(visitor.Visitor):
         self.do_visit(node.super_class)
         for d in node.declarations:
             self.do_visit(d)
+        self.curr_sym_table = parent
 
     @visit.register
     def _(self, node: ast.FuncDefNode):
