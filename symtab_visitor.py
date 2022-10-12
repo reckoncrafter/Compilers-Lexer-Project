@@ -155,8 +155,12 @@ class SymbolTableVisitor(visitor.Visitor):
     @visit.register
     def _(self, node: ast.VarDefNode):
         name, type_ = self.do_visit(node.var)
+        parent = self.curr_sym_table
         value = self.do_visit(node.value)
-        self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str=type_))
+        if parent.get_name() == 'top':
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global | Symbol.Is.Local, type_str=type_))
+        else:
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str=type_))
 
     @visit.register
     def _(self, node: ast.GlobalDeclNode):
