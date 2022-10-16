@@ -18,7 +18,7 @@ class SymbolTableVisitor(visitor.Visitor):
 
     def __init__(self):
         # Built-in functions and their return types.
-        self.built_ins = {'print': "", 'len': "int", 'input': 'str'}
+        self.built_ins = {'print': '<None>', 'len': "int", 'input': 'str', 'object': 'object'}
         self.root_sym_table = None
         self.curr_sym_table = None
         ...  # add more member variables as needed.
@@ -39,7 +39,7 @@ class SymbolTableVisitor(visitor.Visitor):
 
     @visit.register
     def _(self, node: ast.NoneLiteralExprNode):
-        return 'None'
+        return '<None>'
 
     @visit.register
     def _(self, node: ast.StringLiteralExprNode):
@@ -55,7 +55,7 @@ class SymbolTableVisitor(visitor.Visitor):
 
     @visit.register
     def _(self, node: ast.IdentifierExprNode):
-        self.do_visit(node.identifier)
+        return self.do_visit(node.identifier)
 
     @visit.register
     def _(self, node: ast.BinaryOpExprNode):
@@ -86,21 +86,45 @@ class SymbolTableVisitor(visitor.Visitor):
     def _(self, node: ast.FunctionCallExprNode):
         name = self.do_visit(node.identifier)
         sym_tab = self.curr_sym_table
+        prev = sym_tab
         type_ = ''
+        called_already = False
+
+        # if the function was in the built ins, we check if it was already called in the current scope
         if name in self.built_ins:
             type_ = self.built_ins[name]
-        
-        if type_ == '':
-            while sym_tab != None:
+            for sym in sym_tab.get_symbols():
+                if name == sym.get_name():
+                    called_already = True
+            # in case it hasn't been called we add it to the current symbol table
+            if not called_already:
+                self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_))
+        else:
+            # we look for the function in the previous symbol tables to get the return type
+            while sym_tab is not None:
                 for sym in sym_tab.get_symbols():
                     if name == sym.get_name():
-                        type_ = sym.get_type_str()  
+                        type_ = sym.get_type_str()
+                        if sym_tab == self.curr_sym_table:
+                            called_already = True
+                        break
                 sym_tab = sym_tab.get_parent()
-        
-        
-        self.curr_sym_table.add_symbol(Symbol(name, 0, type_))
+            if not called_already:
+                self.curr_sym_table.add_symbol(Symbol(name, 0, type_))
+
         for a in node.args:
-            self.do_visit(a)
+            i = self.do_visit(a)
+            type_ == ''
+            sym_tab = self.curr_sym_table
+            prev = sym_tab
+            while sym_tab is not None:
+                for sym in sym_tab.get_symbols():
+                    if i == sym.get_name():
+                        type_ = sym.get_type_str()
+                prev = sym_tab
+                sym_tab = sym_tab.get_parent()
+            if self.curr_sym_table != prev:
+                self.curr_sym_table.add_symbol(Symbol(i, Symbol.Is.ReadOnly, type_))
 
     @visit.register
     def _(self, node: ast.MethodCallExprNode):
@@ -180,14 +204,14 @@ class SymbolTableVisitor(visitor.Visitor):
     @visit.register
     def _(self, node: ast.GlobalDeclNode):
         name = self.do_visit(node.variable)
-        #value = self.do_visit(node.value)
+        # value = self.do_visit(node.value)
 
         type_ = ''
         for n in self.root_sym_table.get_symbols():
             if name == n.get_name():
                 type_ = n.get_type_str()
 
-        #self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global))
+        # self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global))
         self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str=type_))
 
     @visit.register
@@ -203,24 +227,33 @@ class SymbolTableVisitor(visitor.Visitor):
                     break
             parent = parent.get_parent()
 
-
-        #self.curr_sym_table.add_symbol(Symbol(name, 0))
+        # self.curr_sym_table.add_symbol(Symbol(name, 0))
         self.curr_sym_table.add_symbol(Symbol(name, 0, type_str=type_))
-
 
     @visit.register
     def _(self, node: ast.ClassDefNode):
+        # adding superclass to symbol table
+        # name = self.do_visit(node.super_class)
+        # self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str=name))
         parent = self.curr_sym_table
         name = self.do_visit(node.name)
-        #print(name)
-        self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str="Class"))
+        self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str=name))
 
-        child = symbol_table.Class(name)
+        name2 = self.do_visit(node.super_class)
+        p_sym_tab = parent
+        already_there = False
+        while p_sym_tab is not None:
+            for n in p_sym_tab.get_symbols():
+                if name2 == n.get_name():
+                    already_there = True
+            p_sym_tab = p_sym_tab.get_parent()
+        if not already_there:
+            self.curr_sym_table.add_symbol(Symbol(name2, Symbol.Is.Global, type_str=name2))
+
+        child = symbol_table.Class(name, name2)
         parent.add_child(child)
         self.curr_sym_table = child
-        self.do_visit(node.name)
 
-        self.do_visit(node.super_class)
         for d in node.declarations:
             self.do_visit(d)
         self.curr_sym_table = parent
@@ -231,11 +264,15 @@ class SymbolTableVisitor(visitor.Visitor):
         parent = self.curr_sym_table
         name = self.do_visit(node.name)
         bool_nested = True
+        if node.return_type is not None:
+            type_ = self.do_visit(node.return_type)
+        else:
+            type_ = '<None>'
         if parent.get_name() == 'top':
-            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str="function"))
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Global, type_str=type_))
             bool_nested = False
         else:
-            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str="function"))
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Local, type_str=type_))
             bool_nested = True
         child = symbol_table.Function(name, is_nested=bool_nested)
         parent.add_child(child)
@@ -243,7 +280,7 @@ class SymbolTableVisitor(visitor.Visitor):
         self.do_visit(node.name)
         for p in node.params:
             name, ty = self.do_visit(p)
-            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Parameter, type_str=ty))
+            self.curr_sym_table.add_symbol(Symbol(name, Symbol.Is.Parameter | Symbol.Is.Local, type_str=ty))
         self.do_visit(node.return_type)
         for d in node.declarations:
             self.do_visit(d)
